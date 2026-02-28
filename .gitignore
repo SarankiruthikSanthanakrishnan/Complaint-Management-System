@@ -1,0 +1,33 @@
+# dependencies
+node_modules/
+
+# env files
+.env
+.env.*
+
+# logs
+*.log
+
+# database dumps
+*.sql
+
+# text temp files
+*.txt
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# editor files
+.vscode/
+.idea/
+
+# build
+dist/
+build/
+
+# uploads (optional)
+uploads/
+
+# coverage
+coverage/
