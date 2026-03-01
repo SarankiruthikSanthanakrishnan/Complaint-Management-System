@@ -146,7 +146,7 @@ export const login = async (req, res, next) => {
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
       secure: false,
-      maxAge: (process.env.ACCESS_EXPIRES_IN).slice(0,2) * 24 * 60 * 60 * 1000,
+      maxAge: (process.env.ACCESS_EXPIRES_IN).slice(0,2) * 1000,
       sameSite: 'lax',
     });
     res.status(200).json({
@@ -166,20 +166,19 @@ export const refreshController = async(req,res,next)=>{
     if(!refreshToken){
       return next(new HandleError('Refresh Token not Found, Please Login Again',401))
     }
-    const decoded = await jwt.verify(refreshToken,process.env.JWT_SECRET_KEY)
-    next();
+    const decoded = await jwt.verify(refreshToken,process.env.JWT_SECRET)
     const userRes = await  db.query('select id,role,must_change_password from users where id=$1',[decoded.id]);
     if(userRes.rowCount === 0){
       return next(new HandleError('User not Found',404));
     }
     const user = userRes.rows[0];
-    const newAccessToken = jwt.sign({id:user.id,role:user.role,must_change_password:user.must_change_password},process.env.JWT_SECRET_KEY,{expiresIn:process.env.ACCESS_EXPIRES_IN || '15m'}
+    const newAccessToken = jwt.sign({id:user.id,role:user.role,must_change_password:user.must_change_password},process.env.ACCESS_TOKEN_KEY,{expiresIn:process.env.ACCESS_EXPIRES_IN || '15m'}
     );
 
     res.cookie('accessToken',newAccessToken,{
       httpOnly:true,
       secure:false,
-      maxAge:(process.env.ACCESS_EXPIRES_IN).slice(0,2) * 24 * 60 * 60 * 1000,
+      maxAge:(process.env.ACCESS_EXPIRES_IN).slice(0,2) * 1000,
       sameSite:'lax',
     });
     res.status(200).json({

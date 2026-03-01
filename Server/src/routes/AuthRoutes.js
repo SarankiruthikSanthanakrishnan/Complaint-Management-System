@@ -5,6 +5,7 @@ import {
   getAuthUser,
   login,
   logout,
+  refreshController,
   register,
   resetPassword,
   updateProfile,
@@ -18,6 +19,7 @@ const AuthRoutes = express.Router();
 AuthRoutes.route('/user/verify-regno').post(verifyRegNo);
 AuthRoutes.route('/user/register').post(register);
 AuthRoutes.route('/user/login').post(login);
+AuthRoutes.route('/user/refresh-token').post(refreshController);
 AuthRoutes.route('/user/get-user').get(isAuthenticated, getAuthUser);
 AuthRoutes.route('/user/logout').post(logout);
 AuthRoutes.route('/user/updateProfile').put(
