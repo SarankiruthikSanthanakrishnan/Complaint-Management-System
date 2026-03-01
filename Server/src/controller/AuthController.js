@@ -4,6 +4,7 @@ import HandleError from '../helper/HandleError.js';
 import sendEmail from '../helper/sendEmail.js';
 import sendToken from '../helper/sendToken.js';
 import crypto from 'crypto';
+import  jwt from 'jsonwebtoken';
 
 import bcrypt from 'bcryptjs';
 
@@ -131,18 +132,21 @@ export const login = async (req, res, next) => {
         new HandleError('Account is deactivated. Contact Admin.', 403)
       );
     }
-    const token = sendToken({
+    const {accessToken,refreshToken} = sendToken({
       id: user.id,
       role: user.role,
       must_change_password: user.must_change_password,
     });
-    res.cookie('token', token, {
+    res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: false,
-      maxAge: new Date(
-        Date.now() +
-          parseInt(process.env.COOKIE_EXPIRES_IN) * 24 * 60 * 60 * 1000
-      ),
+      maxAge: process.env.COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
+      sameSite: 'lax',
+    });
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: false,
+      maxAge: (process.env.ACCESS_EXPIRES_IN).slice(0,2) * 24 * 60 * 60 * 1000,
       sameSite: 'lax',
     });
     res.status(200).json({
@@ -151,9 +155,44 @@ export const login = async (req, res, next) => {
     });
   } catch (error) {
     console.log(error);
+
     return next(new HandleError('Login Failed ,Try Again After Sometime', 500));
   }
 };
+
+export const refreshController = async(req,res,next)=>{
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if(!refreshToken){
+      return next(new HandleError('Refresh Token not Found, Please Login Again',401))
+    }
+    const decoded = await jwt.verify(refreshToken,process.env.JWT_SECRET_KEY)
+    next();
+    const userRes = await  db.query('select id,role,must_change_password from users where id=$1',[decoded.id]);
+    if(userRes.rowCount === 0){
+      return next(new HandleError('User not Found',404));
+    }
+    const user = userRes.rows[0];
+    const newAccessToken = jwt.sign({id:user.id,role:user.role,must_change_password:user.must_change_password},process.env.JWT_SECRET_KEY,{expiresIn:process.env.ACCESS_EXPIRES_IN || '15m'}
+    );
+
+    res.cookie('accessToken',newAccessToken,{
+      httpOnly:true,
+      secure:false,
+      maxAge:(process.env.ACCESS_EXPIRES_IN).slice(0,2) * 24 * 60 * 60 * 1000,
+      sameSite:'lax',
+    });
+    res.status(200).json({
+      success:true,
+      message:"Access Token Refreshed"
+    });
+
+
+  } catch (error) {
+      console.log(error);
+      return next(new HandleError('Internal Server Error',500));
+  }
+}
 
 export const logout = (req, res, next) => {
   try {

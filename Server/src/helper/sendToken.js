@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 
 const sendToken = (options) => {
-  const token = jwt.sign(
+  const refreshToken = jwt.sign(
     {
       id: options.id,
       role: options.role,
@@ -12,7 +12,18 @@ const sendToken = (options) => {
       expiresIn: process.env.JWT_EXPIRES_IN,
     }
   );
-  return token;
+  const accessToken = jwt.sign(
+    {
+      id: options.id,
+      role: options.role,
+      must_change_password: options.must_change_password,
+    },
+    process.env.ACCESS_TOKEN_KEY,
+    {
+      expiresIn: process.env.ACCESS_EXPIRES_IN,
+    }
+  );
+  return { refreshToken, accessToken };
 };
 
 export default sendToken;
