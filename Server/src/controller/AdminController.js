@@ -6,11 +6,11 @@ import XLSX from 'xlsx';
 export const AddSingleUser = async (req, res, next) => {
   try {
     const { username, full_name, email, contact, role, department } = req.body;
-    const allowedRoles = ['Faculty', 'Incharge', 'Technician'];
+    const allowedRoles = ['Faculty', 'Incharge'];
     if (!allowedRoles.includes(role)) {
       return next(
         new HandleError(
-          'Invalid role. Only Faculty/Incharge/Technician allowed',
+          'Invalid role. Only Faculty/Incharge allowed',
           400
         )
       );
@@ -59,7 +59,7 @@ export const AddManyUser = async (req, res, next) => {
       return next(new HandleError('Excel file is empty', 400));
     }
 
-    const allowedRoles = ['Faculty', 'Incharge', 'Technician'];
+    const allowedRoles = ['Faculty', 'Incharge'];
 
 
     for (let i = 0; i < jsonData.length; i++) {
@@ -68,7 +68,7 @@ export const AddManyUser = async (req, res, next) => {
       if (!allowedRoles.includes(role)) {
         return next(
           new HandleError(
-            `Invalid role "${role}" found in Excel row ${i + 2}. Only Faculty/Incharge/Technician allowed.`,
+            `Invalid role "${role}" found in Excel row ${i + 2}. Only Faculty/Incharge allowed.`,
             400
           )
         );
@@ -180,11 +180,11 @@ export const updateSingleUser = async (req, res, next) => {
       return next(new HandleError('Invalid email', 400));
     }
 
-    const allowedRoles = ['Admin','MasterAdmin','Faculty', 'Incharge', 'Technician', 'Student'];
+    const allowedRoles = ['Admin','MasterAdmin','Faculty', 'Incharge', 'Student'];
     if (!allowedRoles.includes(role)) {
       return next(
         new HandleError(
-          'Invalid role. Only Admin/MasterAdmin/Faculty/Incharge/Technician/Student allowed',
+          'Invalid role. Only Admin/MasterAdmin/Faculty/Incharge/Student allowed',
           400
         )
       );
@@ -231,7 +231,7 @@ export const updateManyUser = async (req, res, next) => {
       return next(new HandleError('Excel file is empty', 400));
     }
 
-    const allowedRoles = ['Faculty', 'Incharge', 'Technician'];
+    const allowedRoles = ['Faculty', 'Incharge'];
 
     for (let i = 0; i < jsonData.length; i++) {
       const role = String(jsonData[i].Role || '').trim();
@@ -239,7 +239,7 @@ export const updateManyUser = async (req, res, next) => {
       if (role && !allowedRoles.includes(role)) {
         return next(
           new HandleError(
-            `Invalid role "${role}" found in Excel row ${i + 2}. Only Faculty/Incharge/Technician allowed.`,
+            `Invalid role "${role}" found in Excel row ${i + 2}. Only Faculty/Incharge allowed.`,
             400
           )
         );
