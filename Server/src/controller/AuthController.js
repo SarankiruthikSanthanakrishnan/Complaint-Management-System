@@ -77,28 +77,22 @@ export const register = async (req, res, next) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    try {
-      await db.query('BEGIN');
-      await db.query(
-        `INSERT INTO users (username, full_name, email, contact, department, password_hash, role)
-         VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-        [
-          student.reg_no,
-          student.student_name,
-          student.contact_mail,
-          student.contact_number,
-          student.department,
-          hashedPassword,
-          'Student',
-        ]
-      );
 
-      await db.query('UPDATE students SET active=true WHERE reg_no=$1', [reg_no]);
-      await db.query('COMMIT');
-    } catch (dbError) {
-      await db.query('ROLLBACK');
-      throw dbError
-    }
+    await db.query(
+      `INSERT INTO users (username, full_name, email, contact, department, password_hash, role)
+       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+      [
+        student.reg_no,
+        student.student_name,
+        student.contact_mail,
+        student.contact_number,
+        student.department,
+        hashedPassword,
+        'Student',
+      ]
+    );
+
+    await db.query('UPDATE students SET active=true WHERE reg_no=$1', [reg_no]);
     try {
       await sendEmail({
         email: student.contact_mail,
@@ -152,7 +146,7 @@ export const login = async (req, res, next) => {
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
       secure: false,
-      maxAge: (process.env.ACCESS_EXPIRES_IN).slice(0,2) * 60 * 1000,
+      maxAge: (process.env.ACCESS_EXPIRES_IN).slice(0,2) * 1000,
       sameSite: 'lax',
     });
     res.status(200).json({
@@ -184,7 +178,7 @@ export const refreshController = async(req,res,next)=>{
     res.cookie('accessToken',newAccessToken,{
       httpOnly:true,
       secure:false,
-      maxAge:(process.env.ACCESS_EXPIRES_IN).slice(0,2) * 60 * 1000,
+      maxAge:(process.env.ACCESS_EXPIRES_IN).slice(0,2) * 1000,
       sameSite:'lax',
     });
     res.status(200).json({
