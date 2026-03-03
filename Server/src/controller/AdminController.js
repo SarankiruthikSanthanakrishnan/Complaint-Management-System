@@ -78,7 +78,9 @@ export const AddManyUser = async (req, res, next) => {
     let inserted = 0;
     let skipped = 0;
 
-    for (const user of jsonData) {
+    try {
+      await db.query('BEGIN');
+      for (const user of jsonData) {
       const username = String(user.Username).trim();
       const email = String(user.Email).trim();
 
@@ -107,14 +109,19 @@ export const AddManyUser = async (req, res, next) => {
       );
 
       inserted++;
-    }
+      }
+      await db.query('COMMIT');
 
-    return res.status(201).json({
-      success: true,
-      message: 'Users upload completed',
-      inserted,
-      skipped,
-    });
+      return res.status(201).json({
+        success: true,
+        message: 'Users upload completed',
+        inserted,
+        skipped,
+      });
+    } catch (err) {
+      await db.query('ROLLBACK');
+      throw err;
+    }
   } catch (error) {
     return next(
       new HandleError(error.message || 'Unable to upload users', 500)
@@ -249,7 +256,9 @@ export const updateManyUser = async (req, res, next) => {
     let updated = 0;
     let notFound = 0;
 
-    for (const user of jsonData) {
+    try {
+      await db.query('BEGIN');
+      for (const user of jsonData) {
       const username = String(user.Username || '').trim();
       const email = String(user.Email || '').trim();
       const full_name = String(user.Full_name || '').trim();
@@ -283,14 +292,19 @@ export const updateManyUser = async (req, res, next) => {
       );
 
       updated++;
-    }
+      }
+      await db.query('COMMIT');
 
-    return res.status(200).json({
-      success: true,
-      message: 'Users update completed',
-      updated,
-      notFound,
-    });
+      return res.status(200).json({
+        success: true,
+        message: 'Users update completed',
+        updated,
+        notFound,
+      });
+    } catch (err) {
+      await db.query('ROLLBACK');
+      throw err;
+    }
   } catch (error) {
     console.error(error);
     return next(new HandleError('Unable to Update Users', 500));
