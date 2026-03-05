@@ -121,6 +121,9 @@ export const register = async (req, res, next) => {
 export const login = async (req, res, next) => {
   try {
     const { username, password } = req.body;
+    if (!username || !password) {
+      return next(new HandleError('Please provide email/username and password', 400));
+    }
     const userRes = await db.query(
       'select id,username,password_hash,role,active,must_change_password from users where username=$1 or email=$1',
       [username]
