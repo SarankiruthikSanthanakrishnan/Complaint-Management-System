@@ -163,6 +163,8 @@ export const login = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: 'Login Successfully',
+      accessToken:accessToken,
+      refreshToken:refreshToken,
     });
   } catch (error) {
     console.log(error);
@@ -379,6 +381,7 @@ export const updateProfile = async (req, res, next) => {
       message: 'Profile updated successfully',
     });
   } catch (error) {
+    console.log(error);
     return next(new HandleError('Profile Updation Failed', 500));
   }
 };
