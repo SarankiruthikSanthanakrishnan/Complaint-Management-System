@@ -3,16 +3,23 @@ import HandleError from './helper/HandleError.js';
 import AppHandler from './middleware/AppHandler.js';
 import AuthRoutes from './routes/AuthRoutes.js';
 import cookieParser from 'cookie-parser';
+import cors from "cors"
 import AdminRoutes from './routes/AdminRoutes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import MsRoutes from './routes/MsRoutes.js';
 import TechnicianRoutes from './routes/TechnicianRoutes.js';
 
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
 
+app.use(cors({
+  origin:['http://localhost:5173','http://10.28.207.123:5173'],
+  credentials:true
+}
+))
 app.use(cookieParser());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

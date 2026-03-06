@@ -146,17 +146,19 @@ export const login = async (req, res, next) => {
       role: user.role,
       must_change_password: user.must_change_password,
     });
+
+    const isProduction = process.env.SECURE === "production"
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: false,
+      secure: isProduction,
       maxAge: process.env.COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
-      sameSite: 'lax',
+      sameSite: isProduction ? "none":"lax",
     });
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
-      secure: false,
+      secure: isProduction,
       maxAge: (process.env.ACCESS_EXPIRES_IN).slice(0,2) * 60 * 1000,
-      sameSite: 'lax',
+      sameSite: isProduction ? "none":"lax",
     });
     res.status(200).json({
       success: true,
@@ -183,12 +185,12 @@ export const refreshController = async(req,res,next)=>{
     const user = userRes.rows[0];
     const newAccessToken = jwt.sign({id:user.id,role:user.role,must_change_password:user.must_change_password},process.env.ACCESS_TOKEN_KEY,{expiresIn:process.env.ACCESS_EXPIRES_IN || '15m'}
     );
-
+    const isProduction = process.env.SECURE === "production"
     res.cookie('accessToken',newAccessToken,{
       httpOnly:true,
-      secure:false,
+      secure:isProduction,
       maxAge:(process.env.ACCESS_EXPIRES_IN).slice(0,2) * 60 * 1000,
-      sameSite:'lax',
+      sameSite: isProduction ? "none":"lax",
     });
     res.status(200).json({
       success:true,
@@ -204,10 +206,16 @@ export const refreshController = async(req,res,next)=>{
 
 export const logout = (req, res, next) => {
   try {
-    res.clearCookie('token', {
+    const isProduction = process.env.SECURE === "production"
+    res.clearCookie('refreshToken', {
       httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? "none":"lax",
+    });
+    res.clearCookie('accessToken', {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? "none":"lax",
     });
 
     return res.status(200).json({
