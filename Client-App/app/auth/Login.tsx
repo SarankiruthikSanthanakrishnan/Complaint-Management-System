@@ -1,48 +1,64 @@
 import { View, Text, KeyboardAvoidingView, Platform, TextInput, Pressable, ActivityIndicator } from 'react-native'
 import React, { useEffect, useState } from 'react'
-import { useAuth } from '../context/AuthContext'
-import { Redirect, useRouter } from 'expo-router'
+
+import { useRouter } from 'expo-router'
+import Toast from "react-native-toast-message"
+import useAuth from '@/context/AuthContext'
 
 const Login = () => {
 
-  const { login,isAuthenticated} = useAuth()
-  const router = useRouter();
+  const { login, isAuthenticated, user } = useAuth()
+  const router = useRouter()
 
   const [email,setEmail] = useState("")
   const [password,setPassword] = useState("")
-  const [error,setError] = useState("")
   const [loading,setLoading] = useState(false)
 
   useEffect(()=>{
-    if(isAuthenticated){
-    router.push('/(tabs)/Home')
+    if(isAuthenticated && user){
+
+      Toast.show({
+        type:"success",
+        text1:"Login Successful"
+      })
+
+      if (user.role === "Student" || user.role === "Faculty") {
+        router.replace('/(user-tabs)/Home')
+      } else if (user.role === "Technician") {
+        router.replace('/(technician-tabs)/Dashboard')
+      } else if (user.role === "Admin" || user.role === "MasterAdmin") {
+        router.replace('/(admin-tabs)/Dashboard')
+      } else {
+        router.replace('/')
+      }
     }
-  },[isAuthenticated])
+  },[isAuthenticated, user])
+
+
 
   const handleLogin = async () => {
 
-
-
     if(!email || !password){
-      setError("Please enter email and password")
+
+      Toast.show({
+        type:"error",
+        text1:"Error",
+        text2:"All fields are required"
+      })
+
       return
     }
 
     try{
 
       setLoading(true)
-      setError("")
 
-      await login(email,password);
+      await login(email,password)
 
+    }finally{
 
-
-
-    }catch(err){
-      setError("Login failed")
-    }
-    finally{
       setLoading(false)
+
     }
 
   }
@@ -59,12 +75,6 @@ const Login = () => {
         <Text style={{fontSize:28,fontWeight:"bold",textAlign:'center',marginBottom:20}}>
           Login
         </Text>
-
-        {error ? (
-          <Text style={{color:"red",marginBottom:10}}>
-            {error}
-          </Text>
-        ) : null}
 
         <TextInput
           placeholder="Email"
@@ -109,6 +119,13 @@ const Login = () => {
           }
 
         </Pressable>
+
+        <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 25 }}>
+          <Text style={{ color: '#64748b' }}>Don't have an account? </Text>
+          <Pressable onPress={() => router.push('/auth/RoleSelection')}>
+            <Text style={{ color: '#0284c7', fontWeight: 'bold' }}>Register</Text>
+          </Pressable>
+        </View>
 
       </View>
 

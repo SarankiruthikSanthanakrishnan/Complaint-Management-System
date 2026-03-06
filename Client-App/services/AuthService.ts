@@ -6,7 +6,7 @@ export const UserVerify = (data:string)=>{
 }
 
 export const UserRegister = (userData:Object)=>{
-   return api.post('/auth/user/register',{userData});
+   return api.post('/auth/user/register', userData);
 }
 
 export const UserLogin = (username:string,password:string)=>{
