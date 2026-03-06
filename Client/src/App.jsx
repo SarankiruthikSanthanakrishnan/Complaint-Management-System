@@ -1,16 +1,23 @@
-import { useState, useEffect } from "react";
-import { Routes, Route } from "react-router-dom";
-import Home from "./Screens/user/Home";
+import React from 'react';
+import Navbar from './Components/Navbar';
+import Footer from './Components/Footer';
+import { Route, Routes } from 'react-router-dom';
+import Login from './Components/Login';
+import Home from './Screens/user/Home';
 
-function App() {
-
+const App = () => {
   return (
-   <>
-     <Routes>
-       <Route path="/" element={<Home />} />
-     </Routes>
-   </>
+    <>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+      </Routes>
+
+      <Footer />
+    </>
   );
-}
+};
 
 export default App;
