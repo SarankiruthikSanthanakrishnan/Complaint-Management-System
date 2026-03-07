@@ -8,7 +8,7 @@ import { UserVerify } from '@/services/AuthService'
 const VerifyRegno = () => {
   const router = useRouter()
 
-  const [regNo, setRegNo] = useState("")
+  const [regNo, setRegNo] = useState("");
   const [loading, setLoading] = useState(false)
 
   const handleVerify = async () => {
@@ -27,6 +27,7 @@ const VerifyRegno = () => {
       const response = await UserVerify(regNo);
 
       if (response?.data?.success || response?.status === 200) {
+        const student = response?.data?.student
         Toast.show({
           type:"success",
           text1:"Verified successfully",
@@ -34,7 +35,13 @@ const VerifyRegno = () => {
         })
 
         // Passing the reg no to the register page
-        router.push(`/auth/Register?regNo=${regNo}` as any)
+        router.push({
+        pathname: "/auth/Register",
+        params: {
+          regNo: regNo,
+          userData: JSON.stringify(student)
+        }
+         })
       }
 
     } catch (err: any) {

@@ -1,5 +1,5 @@
 import { View, Text, KeyboardAvoidingView, Platform, TextInput, Pressable, ActivityIndicator } from 'react-native'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import Toast from "react-native-toast-message"
 import { UserRegister } from '@/services/AuthService'
@@ -8,12 +8,23 @@ import { UserRegister } from '@/services/AuthService'
 const Register = () => {
   const router = useRouter()
   // Retrieve the regNo passed from VerifyRegno.tsx
-  const { regNo } = useLocalSearchParams()
+  const { regNo,userData } = useLocalSearchParams()
 
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [loading, setLoading] = useState(false)
+  const [student,setStudent] = useState<any|null>(null);
 
+useEffect(() => {
+  if (userData && typeof userData === "string") {
+    try {
+      const parsed = JSON.parse(userData);
+      setStudent(parsed);
+    } catch (error) {
+      console.log("Invalid student data");
+    }
+  }
+}, [userData]);
   const handleRegister = async () => {
     if (!password.trim() || !confirmPassword.trim()) {
       Toast.show({
@@ -80,20 +91,46 @@ const Register = () => {
         </Text>
 
         <TextInput
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          style={{
-            borderWidth:1,
-            borderColor:"#ccc",
-            backgroundColor: "white",
-            padding:14,
-            borderRadius:8,
-            marginBottom:15,
-            fontSize: 16
-          }}
-        />
+  placeholder="Student Name"
+  value={student?.student_name || ""}
+  editable={false}
+  style={{
+    borderWidth:1,
+    borderColor:"#ccc",
+    backgroundColor:"#f1f5f9",
+    padding:14,
+    borderRadius:8,
+    marginBottom:15
+  }}
+/>
+
+<TextInput
+  placeholder="Department"
+  value={student?.department || ""}
+  editable={false}
+  style={{
+    borderWidth:1,
+    borderColor:"#ccc",
+    backgroundColor:"#f1f5f9",
+    padding:14,
+    borderRadius:8,
+    marginBottom:15
+  }}
+/>
+
+<TextInput
+  placeholder="Password"
+  value={password}
+  secureTextEntry
+  style={{
+    borderWidth:1,
+    borderColor:"#ccc",
+    backgroundColor:"white",
+    padding:14,
+    borderRadius:8,
+    marginBottom:15
+  }}
+/>
 
         <TextInput
           placeholder="Confirm Password"

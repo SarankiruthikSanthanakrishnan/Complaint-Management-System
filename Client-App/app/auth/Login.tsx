@@ -1,78 +1,103 @@
-import { View, Text, KeyboardAvoidingView, Platform, TextInput, Pressable, ActivityIndicator } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import {
+  View,
+  Text,
+  KeyboardAvoidingView,
+  Platform,
+  TextInput,
+  Pressable,
+  ActivityIndicator
+} from "react-native";
 
-import { useRouter } from 'expo-router'
-import Toast from "react-native-toast-message"
-import useAuth from '@/context/AuthContext'
+import React, { useEffect, useState } from "react";
+import { useRouter } from "expo-router";
+import Toast from "react-native-toast-message";
+import useAuth from "@/context/AuthContext";
 
 const Login = () => {
 
-  const { login, isAuthenticated, user } = useAuth()
-  const router = useRouter()
+  const { login, isAuthenticated, user, error, loading } = useAuth();
 
-  const [email,setEmail] = useState("")
-  const [password,setPassword] = useState("")
-  const [loading,setLoading] = useState(false)
+  const router = useRouter();
 
-  useEffect(()=>{
-    if(isAuthenticated && user){
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  // Show login error
+  useEffect(() => {
+
+    if (error) {
+      Toast.show({
+        type: "error",
+        text1: "Login Failed",
+        text2: error
+      });
+    }
+
+  }, [error]);
+
+  // Redirect based on role
+  useEffect(() => {
+
+    if (isAuthenticated && user) {
 
       Toast.show({
-        type:"success",
-        text1:"Login Successful"
-      })
+        type: "success",
+        text1: "Login Successful"
+      });
 
       if (user.role === "Student" || user.role === "Faculty") {
-        router.replace('/(user-tabs)/Home')
+
+        router.replace("/(user-tabs)/Home");
+
       } else if (user.role === "Technician") {
-        router.replace('/(technician-tabs)/Dashboard')
+
+        router.replace("/(technician-tabs)/Dashboard");
+
       } else if (user.role === "Admin" || user.role === "MasterAdmin") {
-        router.replace('/(admin-tabs)/Dashboard')
-      } else {
-        router.replace('/')
+
+        router.replace("/(admin-tabs)/Dashboard");
+
       }
+
     }
-  },[isAuthenticated, user])
 
-
+  }, [isAuthenticated, user]);
 
   const handleLogin = async () => {
 
-    if(!email || !password){
+    if (!email || !password) {
 
       Toast.show({
-        type:"error",
-        text1:"Error",
-        text2:"All fields are required"
-      })
+        type: "error",
+        text1: "Error",
+        text2: "All fields are required"
+      });
 
-      return
-    }
-
-    try{
-
-      setLoading(true)
-
-      await login(email,password)
-
-    }finally{
-
-      setLoading(false)
+      return;
 
     }
 
-  }
+    await login(email, password);
+
+  };
 
   return (
 
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{flex:1}}
+      style={{ flex: 1 }}
     >
 
-      <View style={{flex:1, justifyContent:'center', padding:20}}>
+      <View style={{ flex: 1, justifyContent: "center", padding: 20 }}>
 
-        <Text style={{fontSize:28,fontWeight:"bold",textAlign:'center',marginBottom:20}}>
+        <Text
+          style={{
+            fontSize: 28,
+            fontWeight: "bold",
+            textAlign: "center",
+            marginBottom: 20
+          }}
+        >
           Login
         </Text>
 
@@ -81,11 +106,11 @@ const Login = () => {
           value={email}
           onChangeText={setEmail}
           style={{
-            borderWidth:1,
-            borderColor:"#ccc",
-            padding:12,
-            borderRadius:8,
-            marginBottom:10
+            borderWidth: 1,
+            borderColor: "#ccc",
+            padding: 12,
+            borderRadius: 8,
+            marginBottom: 10
           }}
         />
 
@@ -95,43 +120,61 @@ const Login = () => {
           onChangeText={setPassword}
           secureTextEntry
           style={{
-            borderWidth:1,
-            borderColor:"#ccc",
-            padding:12,
-            borderRadius:8,
-            marginBottom:20
+            borderWidth: 1,
+            borderColor: "#ccc",
+            padding: 12,
+            borderRadius: 8,
+            marginBottom: 20
           }}
         />
 
         <Pressable
           onPress={handleLogin}
           style={{
-            backgroundColor:'black',
-            padding:14,
-            borderRadius:8,
-            alignItems:'center'
+            backgroundColor: "black",
+            padding: 14,
+            borderRadius: 8,
+            alignItems: "center"
           }}
         >
 
           {loading
-            ? <ActivityIndicator color="white"/>
-            : <Text style={{color:"white"}}>Sign In</Text>
+            ? <ActivityIndicator color="white" />
+            : <Text style={{ color: "white" }}>Sign In</Text>
           }
 
         </Pressable>
 
-        <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 25 }}>
-          <Text style={{ color: '#64748b' }}>Don't have an account? </Text>
-          <Pressable onPress={() => router.push('/auth/RoleSelection')}>
-            <Text style={{ color: '#0284c7', fontWeight: 'bold' }}>Register</Text>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "center",
+            marginTop: 25
+          }}
+        >
+          <Text style={{ color: "#64748b" }}>
+            Don't have an account?
+          </Text>
+
+          <Pressable onPress={() => router.push("/auth/RoleSelection")}>
+            <Text
+              style={{
+                color: "#0284c7",
+                fontWeight: "bold"
+              }}
+            >
+              {" "}Register
+            </Text>
           </Pressable>
+
         </View>
 
       </View>
 
     </KeyboardAvoidingView>
 
-  )
-}
+  );
 
-export default Login
+};
+
+export default Login;

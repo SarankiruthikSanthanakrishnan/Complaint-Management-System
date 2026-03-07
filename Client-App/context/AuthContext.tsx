@@ -1,15 +1,15 @@
 import { User } from "@/types/types";
 import { createContext, useContext, useEffect, useState } from "react";
-import { UserLogin,CurrentUser, UserLogout } from "../services/AuthService";
+import { UserLogin, CurrentUser, UserLogout } from "../services/AuthService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export interface AuthContextType {
   user: User | null;
-  loading:boolean;
-  login:(username:string,password:string)=>void;
-  logout:()=>void;
-  isAuthenticated:boolean | null;
-  error:string | null
+  loading: boolean;
+  login: (username: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  isAuthenticated: boolean | null;
+  error: string | null;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,90 +17,125 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const [user, setUser] = useState<User | null>(null);
-  const [loading,setLoading] = useState(false);
-  const [isAuthenticated,setIsAuthenticated]=useState<boolean|null>(false);
-  const [error,setError]=useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(false);
+  const [error, setError] = useState<string | null>(null);
 
-   useEffect(()=>{
-    const checkUser = async()=>{
+  // Check logged user on app start
+  useEffect(() => {
+
+    const checkUser = async () => {
+
       try {
-        setLoading(true);
-        const userRes = await CurrentUser();
-        setIsAuthenticated(true);
-        setUser(userRes.data.user);
-      } catch (error:any) {
-         setIsAuthenticated(false);
-        setError(error?.response?.data?.message)
-      }
-      finally{
 
+        setLoading(true);
+
+        const userRes = await CurrentUser();
+
+        setUser(userRes.data.user);
+        setIsAuthenticated(true);
+
+      } catch (err: any) {
+
+        setIsAuthenticated(false);
+        setUser(null);
+      } finally {
         setLoading(false);
       }
-    }
+
+    };
+
     checkUser();
-  },[])
 
+  }, []);
 
-  const login = async(username:string,password:string)=>{
-  try {
+  // LOGIN
+  const login = async (username: string, password: string) => {
 
-    setLoading(true)
-    setError(null)
+    try {
 
-    const response = await UserLogin(username,password)
+      setLoading(true);
+      setError(null);
 
-    if(response.data.success){
+      const response = await UserLogin(username, password);
 
-      setIsAuthenticated(true)
+      if (response?.data?.success) {
 
-      if (response.data.accessToken) {
-        await AsyncStorage.setItem("accessToken", response.data.accessToken)
+        const { accessToken, refreshToken } = response.data;
+
+        if (accessToken) {
+          await AsyncStorage.setItem("accessToken", accessToken);
+        }
+
+        if (refreshToken) {
+          await AsyncStorage.setItem("refreshToken", refreshToken);
+        }
+
+        const userRes = await CurrentUser();
+
+        setUser(userRes.data.user);
+        setIsAuthenticated(true);
+
       }
 
-      if (response.data.refreshToken) {
-        await AsyncStorage.setItem("refreshToken", response.data.refreshToken)
-      }
+    } catch (err: any) {
 
-      const userRes = await CurrentUser()
+      setError(err?.response?.data?.message || "Login failed");
+      setIsAuthenticated(false);
 
-      setUser(userRes.data.user)
+    } finally {
+
+      setLoading(false);
 
     }
 
-  } catch (err:any) {
+  };
 
-    setError(err?.response?.data?.message || "Login failed")
+  // LOGOUT
+  const logout = async () => {
 
-  } finally {
-
-    setLoading(false)
-
-  }
-}
-
-  const logout = async()=>{
     try {
-      setLoading(true)
+
+      setLoading(true);
+
       await UserLogout();
+
       await AsyncStorage.removeItem("accessToken");
       await AsyncStorage.removeItem("refreshToken");
+
       setUser(null);
       setIsAuthenticated(false);
-    } catch (error) {
-      console.log(error);
-    }finally{
-      setLoading(false);
-    }
-  }
 
+    } catch (err) {
+
+      console.log(err);
+
+    } finally {
+
+      setLoading(false);
+
+    }
+
+  };
 
   return (
-    <AuthContext.Provider value={{ user,loading,login,logout ,isAuthenticated,error}}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        logout,
+        isAuthenticated,
+        error
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
- const useAuth = () => {
+
+const useAuth = () => {
+
   const context = useContext(AuthContext);
 
   if (!context) {
@@ -108,6 +143,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   return context;
+
 };
 
 export default useAuth;
