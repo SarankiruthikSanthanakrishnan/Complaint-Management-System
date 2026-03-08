@@ -2,7 +2,8 @@ import jwt from 'jsonwebtoken';
 import HandleError from '../helper/HandleError.js';
 
 const isAuthenticated = (req, res, next) => {
-  const token = req.cookies.accessToken || '';
+  const authHead = req.headers.Authorization || req.headers.authorization;
+  const token =  (authHead && authHead.split(' ')[1]) || req.cookies.accessToken || '';
   if (!token) {
     return next(new HandleError('Unauthorized Access', 401));
   }
