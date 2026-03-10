@@ -1,7 +1,12 @@
-import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 
-export const createToken = () => {
-  const token = crypto.randomBytes(20).toString('hex');
-  const resetToken = crypto.createHash('sha256').update(token).digest('hex');
-  return { resetToken, token };
+export const createToken = (userId) => {
+  const token = jwt.sign(
+    { user: userId, type: 'password-reset' },
+    process.env.RESET_KEY,
+    {
+      expiresIn: '5m',
+    }
+  );
+  return token;
 };

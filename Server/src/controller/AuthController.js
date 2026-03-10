@@ -1,17 +1,19 @@
 import db from '../config/db.js';
-import { createToken } from '../helper/createToken.js';
 import HandleError from '../helper/HandleError.js';
 import sendEmail from '../helper/sendEmail.js';
 import sendToken from '../helper/sendToken.js';
 import crypto from 'crypto';
-import  jwt from 'jsonwebtoken';
-
+import jwt from 'jsonwebtoken';
+import ip from 'ip';
 import bcrypt from 'bcryptjs';
+import { createToken } from '../helper/createToken.js';
+
+const ipAddress = ip.address();
 
 export const verifyRegNo = async (req, res, next) => {
   try {
     const { reg_no } = req.body;
-    if(!reg_no || reg_no.trim() === ''){
+    if (!reg_no || reg_no.trim() === '') {
       return next(new HandleError('Registration number is required', 400));
     }
     const userRes = await db.query(
@@ -37,13 +39,13 @@ export const register = async (req, res, next) => {
   try {
     const { reg_no, password, confirmpassword } = req.body;
 
-    if(!reg_no || reg_no.trim() === ''){
+    if (!reg_no || reg_no.trim() === '') {
       return next(new HandleError('Registration number is required', 400));
     }
-    if(!password || password.trim() === ''){
+    if (!password || password.trim() === '') {
       return next(new HandleError('Password is required', 400));
     }
-    if(!confirmpassword || confirmpassword.trim() === ''){
+    if (!confirmpassword || confirmpassword.trim() === '') {
       return next(new HandleError('Confirm Password is required', 400));
     }
 
@@ -93,11 +95,13 @@ export const register = async (req, res, next) => {
         ]
       );
 
-      await db.query('UPDATE students SET active=true WHERE reg_no=$1', [reg_no]);
+      await db.query('UPDATE students SET active=true WHERE reg_no=$1', [
+        reg_no,
+      ]);
       await db.query('COMMIT');
     } catch (dbError) {
       await db.query('ROLLBACK');
-      throw dbError
+      throw dbError;
     }
     try {
       await sendEmail({
@@ -122,7 +126,9 @@ export const login = async (req, res, next) => {
   try {
     const { username, password } = req.body;
     if (!username || !password) {
-      return next(new HandleError('Please provide email/username and password', 400));
+      return next(
+        new HandleError('Please provide email/username and password', 400)
+      );
     }
     const userRes = await db.query(
       'select id,username,password_hash,role,active,must_change_password from users where username=$1 or email=$1',
@@ -141,30 +147,30 @@ export const login = async (req, res, next) => {
         new HandleError('Account is deactivated. Contact Admin.', 403)
       );
     }
-    const {accessToken,refreshToken} = sendToken({
+    const { accessToken, refreshToken } = sendToken({
       id: user.id,
       role: user.role,
       must_change_password: user.must_change_password,
     });
 
-    const isProduction = process.env.SECURE === "production"
+    const isProduction = process.env.SECURE === 'production';
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: isProduction,
       maxAge: process.env.COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
-      sameSite: isProduction ? "none":"lax",
+      sameSite: isProduction ? 'none' : 'lax',
     });
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
       secure: isProduction,
-      maxAge: (process.env.ACCESS_EXPIRES_IN).slice(0,2) * 60 * 1000,
-      sameSite: isProduction ? "none":"lax",
+      maxAge: process.env.ACCESS_EXPIRES_IN.slice(0, 2) * 60 * 1000,
+      sameSite: isProduction ? 'none' : 'lax',
     });
     res.status(200).json({
       success: true,
       message: 'Login Successfully',
-      accessToken:accessToken,
-      refreshToken:refreshToken,
+      accessToken: accessToken,
+      refreshToken: refreshToken,
     });
   } catch (error) {
     console.log(error);
@@ -173,52 +179,62 @@ export const login = async (req, res, next) => {
   }
 };
 
-export const refreshController = async(req,res,next)=>{
+export const refreshController = async (req, res, next) => {
   try {
     const refreshToken = req.cookies.refreshToken;
-    if(!refreshToken){
-      return next(new HandleError('Refresh Token not Found, Please Login Again',401))
+    if (!refreshToken) {
+      return next(
+        new HandleError('Refresh Token not Found, Please Login Again', 401)
+      );
     }
-    const decoded = await jwt.verify(refreshToken,process.env.JWT_SECRET)
-    const userRes = await  db.query('select id,role,must_change_password from users where id=$1',[decoded.id]);
-    if(userRes.rowCount === 0){
-      return next(new HandleError('User not Found',404));
+    const decoded = await jwt.verify(refreshToken, process.env.JWT_SECRET);
+    const userRes = await db.query(
+      'select id,role,must_change_password from users where id=$1',
+      [decoded.id]
+    );
+    if (userRes.rowCount === 0) {
+      return next(new HandleError('User not Found', 404));
     }
     const user = userRes.rows[0];
-    const newAccessToken = jwt.sign({id:user.id,role:user.role,must_change_password:user.must_change_password},process.env.ACCESS_TOKEN_KEY,{expiresIn:process.env.ACCESS_EXPIRES_IN || '15m'}
+    const newAccessToken = jwt.sign(
+      {
+        id: user.id,
+        role: user.role,
+        must_change_password: user.must_change_password,
+      },
+      process.env.ACCESS_TOKEN_KEY,
+      { expiresIn: process.env.ACCESS_EXPIRES_IN || '15m' }
     );
-    const isProduction = process.env.SECURE === "production"
-    res.cookie('accessToken',newAccessToken,{
-      httpOnly:true,
-      secure:isProduction,
-      maxAge:(process.env.ACCESS_EXPIRES_IN).slice(0,2) * 60 * 1000,
-      sameSite: isProduction ? "none":"lax",
+    const isProduction = process.env.SECURE === 'production';
+    res.cookie('accessToken', newAccessToken, {
+      httpOnly: true,
+      secure: isProduction,
+      maxAge: process.env.ACCESS_EXPIRES_IN.slice(0, 2) * 60 * 1000,
+      sameSite: isProduction ? 'none' : 'lax',
     });
     res.status(200).json({
-      success:true,
-      message:"Access Token Refreshed",
-      accessToken:newAccessToken,
+      success: true,
+      message: 'Access Token Refreshed',
+      accessToken: newAccessToken,
     });
-
-
   } catch (error) {
-      console.log(error);
-      return next(new HandleError('Internal Server Error',500));
+    console.log(error);
+    return next(new HandleError('Internal Server Error', 500));
   }
-}
+};
 
 export const logout = (req, res, next) => {
   try {
-    const isProduction = process.env.SECURE === "production"
+    const isProduction = process.env.SECURE === 'production';
     res.clearCookie('refreshToken', {
       httpOnly: true,
       secure: isProduction,
-      sameSite: isProduction ? "none":"lax",
+      sameSite: isProduction ? 'none' : 'lax',
     });
     res.clearCookie('accessToken', {
       httpOnly: true,
       secure: isProduction,
-      sameSite: isProduction ? "none":"lax",
+      sameSite: isProduction ? 'none' : 'lax',
     });
 
     return res.status(200).json({
@@ -234,7 +250,7 @@ export const getAuthUser = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const userRes = await db.query(
-      'select id,username,full_name,email,contact,department,role from users where id=$1',
+      'select id,username,full_name,email,contact,department,role,profile_image from users where id=$1',
       [userId]
     );
     if (userRes.rowCount === 0) {
@@ -252,74 +268,118 @@ export const getAuthUser = async (req, res, next) => {
 export const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
+
+    if (!email) {
+      return next(new HandleError('Email is required', 400));
+    }
+
     const userRes = await db.query(
-      'select id,full_name from users where email=$1',
+      'SELECT id, full_name FROM users WHERE email=$1',
       [email]
     );
+
     if (userRes.rowCount === 0) {
       return next(new HandleError('User not found', 404));
     }
+
     const user = userRes.rows[0];
-    const { token, resetToken } = await createToken();
-    const expireTime = new Date(Date.now() + 15 * 60 * 1000);
-    await db.query(
-      'update users set reset_token=$1, reset_token_expiry=$2 where id=$3',
-      [resetToken, expireTime, user.id]
+
+    // JWT token create
+    const token = jwt.sign(
+      {
+        user: user.id,
+        type: 'password-reset',
+      },
+      process.env.RESET_KEY,
+      { expiresIn: '5m' }
     );
-    const resetUrl = `${req.protocol}://${req.host}/api/v1/auth/user/reset-password/${token}`;
-    const message = `Dear ${user.full_name},\n\nYou requested a password reset. Please click on the following link to reset your password:\n\n${resetUrl}\n\nThis link will expire in 15 minutes.\n\nIf you did not request this, please ignore this email.\n\nBest regards,\nComplaint Management System Team`;
-    try {
-      await sendEmail({
-        email: email,
-        subject: 'Password Reset Request',
-        message: message,
-      });
-      res.status(200).json({
-        success: true,
-        message: 'Password reset email sent',
-      });
-    } catch (error) {
-      next(new HandleError('Failed to send email', 500));
-    }
+
+    // reset link
+    const resetUrl = `${req.protocol}://${req.get(
+      'host'
+    )}/reset-password?token=${token}`;
+
+    const message = `Dear ${user.full_name},
+
+You requested a password reset.
+
+Please click the following link:
+
+${resetUrl}
+
+This link will expire in 5 minutes.
+
+If you did not request this, please ignore this email.
+
+Best regards,
+Complaint Management System Team`;
+
+    await sendEmail({
+      email: email,
+      subject: 'Password Reset Request',
+      message: message,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset email sent',
+    });
   } catch (error) {
+    console.log(error);
     return next(new HandleError('Internal Server Error', 500));
   }
 };
 
 export const resetPassword = async (req, res, next) => {
   try {
-    const { token } = req.params;
+    const { token } = req.query;
     const { password, confirmpassword } = req.body;
+
+    if (!token) {
+      return next(new HandleError('Token missing', 400));
+    }
+
     if (!password || !confirmpassword) {
       return next(new HandleError('Password fields required', 400));
     }
+
     if (password !== confirmpassword) {
       return next(new HandleError('Password mismatch', 400));
     }
 
-    const resetToken = crypto.createHash('sha256').update(token).digest('hex');
+    let decoded;
 
-    const userRes = await db.query(
-      'select id,reset_token_expiry from users where reset_token=$1',
-      [resetToken]
-    );
-    if (userRes.rowCount === 0) {
+    try {
+      decoded = jwt.verify(token, process.env.RESET_KEY);
+    } catch (err) {
       return next(new HandleError('Invalid or expired token', 400));
     }
-    const user = userRes.rows[0];
-    if (user.reset_token_expiry < new Date()) {
-      return next(new HandleError('Token has expired', 400));
+
+    if (decoded.type !== 'password-reset') {
+      return next(new HandleError('Invalid reset token', 400));
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
-    await db.query(
-      'update users set password_hash=$1, reset_token=null, reset_token_expiry=null where id=$2',
-      [hashedPassword, user.id]
-    );
+
+    const userRes = await db.query('SELECT id FROM users WHERE id=$1', [
+      decoded.user,
+    ]);
+
+    if (userRes.rowCount === 0) {
+      return next(new HandleError('User not found', 404));
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    await db.query('UPDATE users SET password_hash=$1 WHERE id=$2', [
+      hashedPassword,
+      decoded.user,
+    ]);
+
     res.status(200).json({
       success: true,
       message: 'Password reset successfully',
     });
-  } catch (error) {
+  } catch (err) {
+    console.log(err);
     next(new HandleError('Internal Server Error', 500));
   }
 };

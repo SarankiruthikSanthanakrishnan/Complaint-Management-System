@@ -9,10 +9,7 @@ export const AddSingleUser = async (req, res, next) => {
     const allowedRoles = ['Faculty', 'Incharge'];
     if (!allowedRoles.includes(role)) {
       return next(
-        new HandleError(
-          'Invalid role. Only Faculty/Incharge allowed',
-          400
-        )
+        new HandleError('Invalid role. Only Faculty/Incharge allowed', 400)
       );
     }
     if (!username || !full_name || !email || !contact || !role || !department) {
@@ -30,7 +27,16 @@ export const AddSingleUser = async (req, res, next) => {
     await db.query(
       `INSERT INTO users (username, full_name, email, contact, role, department, password_hash,must_change_password)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-      [username, full_name, email, contact, role, department, password_hash, true]
+      [
+        username,
+        full_name,
+        email,
+        contact,
+        role,
+        department,
+        password_hash,
+        true,
+      ]
     );
     res.status(201).json({
       success: true,
@@ -61,7 +67,6 @@ export const AddManyUser = async (req, res, next) => {
 
     const allowedRoles = ['Faculty', 'Incharge'];
 
-
     for (let i = 0; i < jsonData.length; i++) {
       const role = String(jsonData[i].Role).trim();
 
@@ -81,34 +86,34 @@ export const AddManyUser = async (req, res, next) => {
     try {
       await db.query('BEGIN');
       for (const user of jsonData) {
-      const username = String(user.Username).trim();
-      const email = String(user.Email).trim();
+        const username = String(user.Username).trim();
+        const email = String(user.Email).trim();
 
-      const existingUser = await db.query(
-        'SELECT id FROM users WHERE username=$1 OR email=$2',
-        [username, email]
-      );
+        const existingUser = await db.query(
+          'SELECT id FROM users WHERE username=$1 OR email=$2',
+          [username, email]
+        );
 
-      if (existingUser.rowCount > 0) {
-        skipped++;
-        continue;
-      }
-      await db.query(
-        `INSERT INTO users (username, full_name, email, contact, role, department, password_hash, must_change_password)
+        if (existingUser.rowCount > 0) {
+          skipped++;
+          continue;
+        }
+        await db.query(
+          `INSERT INTO users (username, full_name, email, contact, role, department, password_hash, must_change_password)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-        [
-          username,
-          user.Full_name,
-          email,
-          user.Contact,
-          user.Role,
-          user.Department,
-          password_hash,
-          true,
-        ]
-      );
+          [
+            username,
+            user.Full_name,
+            email,
+            user.Contact,
+            user.Role,
+            user.Department,
+            password_hash,
+            true,
+          ]
+        );
 
-      inserted++;
+        inserted++;
       }
       await db.query('COMMIT');
 
@@ -167,27 +172,33 @@ export const updateSingleUser = async (req, res, next) => {
     const userId = req.params.id;
     const { full_name, email, contact, role, department } = req.body;
 
-    if(!email){
+    if (!email) {
       return next(new HandleError('Email is required', 400));
     }
-    if(!full_name || full_name.trim() === ''){
+    if (!full_name || full_name.trim() === '') {
       return next(new HandleError('Full Name is required', 400));
     }
-    if(!contact || contact.trim() === ''){
+    if (!contact || contact.trim() === '') {
       return next(new HandleError('Contact is required', 400));
     }
-    if(!role || role.trim() === ''){
+    if (!role || role.trim() === '') {
       return next(new HandleError('Role is required', 400));
     }
-    if(!department || department.trim() === ''){
+    if (!department || department.trim() === '') {
       return next(new HandleError('Department is required', 400));
     }
 
-    if(!email.includes('@')){
+    if (!email.includes('@')) {
       return next(new HandleError('Invalid email', 400));
     }
 
-    const allowedRoles = ['Admin','MasterAdmin','Faculty', 'Incharge', 'Student'];
+    const allowedRoles = [
+      'Admin',
+      'MasterAdmin',
+      'Faculty',
+      'Incharge',
+      'Student',
+    ];
     if (!allowedRoles.includes(role)) {
       return next(
         new HandleError(
@@ -197,7 +208,10 @@ export const updateSingleUser = async (req, res, next) => {
       );
     }
 
-    const existingUser = await db.query('SELECT id, role FROM users WHERE id=$1', [userId]);
+    const existingUser = await db.query(
+      'SELECT id, role FROM users WHERE id=$1',
+      [userId]
+    );
     if (existingUser.rowCount === 0) {
       return next(new HandleError('User not found', 404));
     }
@@ -259,39 +273,39 @@ export const updateManyUser = async (req, res, next) => {
     try {
       await db.query('BEGIN');
       for (const user of jsonData) {
-      const username = String(user.Username || '').trim();
-      const email = String(user.Email || '').trim();
-      const full_name = String(user.Full_name || '').trim();
-      const contact = String(user.Contact || '').trim();
-      const role = String(user.Role || '').trim();
-      const department = String(user.Department || '').trim();
+        const username = String(user.Username || '').trim();
+        const email = String(user.Email || '').trim();
+        const full_name = String(user.Full_name || '').trim();
+        const contact = String(user.Contact || '').trim();
+        const role = String(user.Role || '').trim();
+        const department = String(user.Department || '').trim();
 
-      if (!username && !email) {
-        continue;
-      }
+        if (!username && !email) {
+          continue;
+        }
 
-      const existingUser = await db.query(
-        'SELECT id, role FROM users WHERE username=$1 OR email=$2',
-        [username, email]
-      );
+        const existingUser = await db.query(
+          'SELECT id, role FROM users WHERE username=$1 OR email=$2',
+          [username, email]
+        );
 
-      if (existingUser.rowCount === 0) {
-        notFound++;
-        continue;
-      }
+        if (existingUser.rowCount === 0) {
+          notFound++;
+          continue;
+        }
 
-      if (['Admin'].includes(existingUser.rows[0].role)) {
-        continue;
-      }
+        if (['Admin'].includes(existingUser.rows[0].role)) {
+          continue;
+        }
 
-      const userId = existingUser.rows[0].id;
+        const userId = existingUser.rows[0].id;
 
-      await db.query(
-        `UPDATE users SET full_name=$1, email=$2, contact=$3, role=$4, department=$5 WHERE id=$6`,
-        [full_name, email, contact, role, department, userId]
-      );
+        await db.query(
+          `UPDATE users SET full_name=$1, email=$2, contact=$3, role=$4, department=$5 WHERE id=$6`,
+          [full_name, email, contact, role, department, userId]
+        );
 
-      updated++;
+        updated++;
       }
       await db.query('COMMIT');
 
@@ -314,13 +328,18 @@ export const updateManyUser = async (req, res, next) => {
 export const deleteSingleUser = async (req, res, next) => {
   try {
     const userId = req.params.id;
-    const existingUser = await db.query('SELECT id, role FROM users WHERE id=$1', [userId]);
+    const existingUser = await db.query(
+      'SELECT id, role FROM users WHERE id=$1',
+      [userId]
+    );
 
     if (existingUser.rowCount === 0) {
       return next(new HandleError('User not found', 404));
     }
     if (['Admin', 'MasterAdmin'].includes(existingUser.rows[0].role)) {
-      return next(new HandleError('Cannot delete an Admin or MasterAdmin user', 403));
+      return next(
+        new HandleError('Cannot delete an Admin or MasterAdmin user', 403)
+      );
     }
 
     await db.query('DELETE FROM users WHERE id=$1', [userId]);
@@ -340,7 +359,9 @@ export const deleteMultipleUsers = async (req, res, next) => {
     const { userIds } = req.body;
 
     if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
-      return next(new HandleError('Please provide an array of user IDs to delete', 400));
+      return next(
+        new HandleError('Please provide an array of user IDs to delete', 400)
+      );
     }
 
     const existingUsers = await db.query(
@@ -352,10 +373,17 @@ export const deleteMultipleUsers = async (req, res, next) => {
       return next(new HandleError('No users found to delete', 404));
     }
 
-    const hasAdmin = existingUsers.rows.some((user) => ['Admin', 'MasterAdmin'].includes(user.role));
+    const hasAdmin = existingUsers.rows.some((user) =>
+      ['Admin', 'MasterAdmin'].includes(user.role)
+    );
 
     if (hasAdmin) {
-      return next(new HandleError('Cannot delete Admin or MasterAdmin users. Please remove them from selection.', 403));
+      return next(
+        new HandleError(
+          'Cannot delete Admin or MasterAdmin users. Please remove them from selection.',
+          403
+        )
+      );
     }
 
     await db.query('DELETE FROM users WHERE id = ANY($1::int[])', [userIds]);
@@ -369,5 +397,3 @@ export const deleteMultipleUsers = async (req, res, next) => {
     return next(new HandleError('Unable to Delete Users', 500));
   }
 };
-
-
