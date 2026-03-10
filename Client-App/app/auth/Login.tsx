@@ -5,100 +5,117 @@ import {
   Platform,
   TextInput,
   Pressable,
-  ActivityIndicator
-} from "react-native";
+  ActivityIndicator,
+} from 'react-native';
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "expo-router";
-import Toast from "react-native-toast-message";
-import useAuth from "@/context/AuthContext";
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'expo-router';
+import Toast from 'react-native-toast-message';
+import useAuth from '@/context/AuthContext';
+import { ForgotPassword } from '@/services/AuthService';
 
 const Login = () => {
-
   const { login, isAuthenticated, user, error, loading } = useAuth();
 
   const router = useRouter();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isForgot, setIsForgot] = useState(false);
+  const [sending, setSending] = useState(false);
 
   // Show login error
   useEffect(() => {
-
     if (error) {
       Toast.show({
-        type: "error",
-        text1: "Login Failed",
-        text2: error
+        type: 'error',
+        text1: 'Login Failed',
+        text2: error,
       });
     }
-
   }, [error]);
 
   // Redirect based on role
   useEffect(() => {
-
     if (isAuthenticated && user) {
-
       Toast.show({
-        type: "success",
-        text1: "Login Successful"
+        type: 'success',
+        text1: 'Login Successful',
       });
 
-      if (user.role === "Student" || user.role === "Faculty") {
-
-        router.replace("/(user-tabs)/Home");
-
-      } else if (user.role === "Technician") {
-
-        router.replace("/(technician-tabs)/Dashboard");
-
-      } else if (user.role === "Admin" || user.role === "MasterAdmin") {
-
-        router.replace("/(admin-tabs)/Dashboard");
-
+      if (user.role === 'Student' || user.role === 'Faculty') {
+        router.replace('/(user-tabs)/Home');
+      } else if (user.role === 'Technician') {
+        router.replace('/(technician-tabs)/Dashboard');
+      } else if (user.role === 'Admin' || user.role === 'MasterAdmin') {
+        router.replace('/(admin-tabs)/Dashboard');
       }
-
     }
-
   }, [isAuthenticated, user]);
 
   const handleLogin = async () => {
-
     if (!email || !password) {
-
       Toast.show({
-        type: "error",
-        text1: "Error",
-        text2: "All fields are required"
+        type: 'error',
+        text1: 'Error',
+        text2: 'All fields are required',
       });
-
       return;
-
     }
 
     await login(email, password);
+  };
 
+  const handleResetPassword = async () => {
+    if (!email) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Email is required',
+      });
+      return;
+    }
+
+    try {
+      setSending(true);
+
+      const response = await ForgotPassword(email);
+
+      if (response?.data?.success) {
+        Toast.show({
+          type: 'success',
+          text1: 'Reset Link Sent',
+          text2: 'Check your email to reset password',
+        });
+        setIsForgot(false);
+        setEmail('');
+      }
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error?.response?.data?.message || 'Something went wrong',
+      });
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
-
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1 }}
     >
-
-      <View style={{ flex: 1, justifyContent: "center", padding: 20 }}>
-
+      <View style={{ flex: 1, justifyContent: 'center', padding: 20 }}>
         <Text
           style={{
             fontSize: 28,
-            fontWeight: "bold",
-            textAlign: "center",
-            marginBottom: 20
+            fontWeight: 'bold',
+            textAlign: 'center',
+            marginBottom: 20,
           }}
         >
-          Login
+          {isForgot ? 'Reset Password' : 'Login'}
         </Text>
 
         <TextInput
@@ -107,74 +124,94 @@ const Login = () => {
           onChangeText={setEmail}
           style={{
             borderWidth: 1,
-            borderColor: "#ccc",
+            borderColor: '#ccc',
             padding: 12,
             borderRadius: 8,
-            marginBottom: 10
+            marginBottom: 10,
           }}
         />
 
-        <TextInput
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          style={{
-            borderWidth: 1,
-            borderColor: "#ccc",
-            padding: 12,
-            borderRadius: 8,
-            marginBottom: 20
-          }}
-        />
+        {!isForgot && (
+          <TextInput
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            style={{
+              borderWidth: 1,
+              borderColor: '#ccc',
+              padding: 12,
+              borderRadius: 8,
+              marginBottom: 20,
+            }}
+          />
+        )}
 
         <Pressable
-          onPress={handleLogin}
-          style={{
-            backgroundColor: "black",
-            padding: 14,
-            borderRadius: 8,
-            alignItems: "center"
-          }}
+          onPress={() => setIsForgot(!isForgot)}
+          style={{ marginBottom: 20 }}
         >
-
-          {loading
-            ? <ActivityIndicator color="white" />
-            : <Text style={{ color: "white" }}>Sign In</Text>
-          }
-
+          <Text
+            style={{
+              color: '#0284c7',
+              textAlign: 'right',
+              textDecorationLine: 'underline',
+            }}
+          >
+            {isForgot ? 'Back to Login' : 'Forgot Password ?'}
+          </Text>
         </Pressable>
 
-        <View
+        <Pressable
+          onPress={isForgot ? handleResetPassword : handleLogin}
           style={{
-            flexDirection: "row",
-            justifyContent: "center",
-            marginTop: 25
+            backgroundColor: 'black',
+            padding: 14,
+            borderRadius: 8,
+            alignItems: 'center',
           }}
         >
-          <Text style={{ color: "#64748b" }}>
-            Don't have an account?
-          </Text>
+          {isForgot ? (
+            sending ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={{ color: 'white' }}>Send Reset Link</Text>
+            )
+          ) : loading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text style={{ color: 'white' }}>Sign In</Text>
+          )}
+        </Pressable>
 
-          <Pressable onPress={() => router.push("/auth/RoleSelection")}>
-            <Text
-              style={{
-                color: "#0284c7",
-                fontWeight: "bold"
-              }}
-            >
-              {" "}Register
-            </Text>
-          </Pressable>
+        {!isForgot && (
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'center',
+              marginTop: 25,
+            }}
+          >
+            <Text style={{ color: '#64748b' }}>Don't have an account?</Text>
 
-        </View>
-
+            <Pressable onPress={() => router.push('/auth/RoleSelection')}>
+              <Text
+                style={{
+                  color: '#0284c7',
+                  fontWeight: 'bold',
+                }}
+              >
+                {' '}
+                Register
+              </Text>
+            </Pressable>
+          </View>
+        )}
       </View>
 
+      <Toast />
     </KeyboardAvoidingView>
-
   );
-
 };
 
 export default Login;

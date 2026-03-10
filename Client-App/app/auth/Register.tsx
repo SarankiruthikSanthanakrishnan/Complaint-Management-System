@@ -1,136 +1,189 @@
-import { View, Text, KeyboardAvoidingView, Platform, TextInput, Pressable, ActivityIndicator } from 'react-native'
-import React, { useEffect, useState } from 'react'
-import { useLocalSearchParams, useRouter } from 'expo-router'
-import Toast from "react-native-toast-message"
-import { UserRegister } from '@/services/AuthService'
+import {
+  View,
+  Text,
+  KeyboardAvoidingView,
+  Platform,
+  TextInput,
+  Pressable,
+  ActivityIndicator,
+} from 'react-native';
 
+import React, { useEffect, useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import Toast from 'react-native-toast-message';
+import { UserRegister } from '@/services/AuthService';
 
 const Register = () => {
-  const router = useRouter()
-  // Retrieve the regNo passed from VerifyRegno.tsx
-  const { regNo,userData } = useLocalSearchParams()
+  const router = useRouter();
 
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [student,setStudent] = useState<any|null>(null);
+  const { regNo, userData } = useLocalSearchParams();
 
-useEffect(() => {
-  if (userData && typeof userData === "string") {
-    try {
-      const parsed = JSON.parse(userData);
-      setStudent(parsed);
-    } catch (error) {
-      console.log("Invalid student data");
+  const regNumber = Array.isArray(regNo) ? regNo[0] : regNo;
+
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [student, setStudent] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (userData && typeof userData === 'string') {
+      try {
+        const parsed = JSON.parse(userData);
+        setStudent(parsed);
+      } catch (error) {
+        console.log('Invalid student data');
+      }
     }
-  }
-}, [userData]);
+  }, [userData]);
+
   const handleRegister = async () => {
     if (!password.trim() || !confirmPassword.trim()) {
       Toast.show({
-        type: "error",
-        text1: "Error",
-        text2: "Both password fields are required"
-      })
-      return
+        type: 'error',
+        text1: 'Error',
+        text2: 'Both password fields are required',
+      });
+
+      return;
+    }
+
+    if (password.length < 6) {
+      Toast.show({
+        type: 'error',
+        text1: 'Weak Password',
+        text2: 'Password must be at least 6 characters',
+      });
+
+      return;
     }
 
     if (password !== confirmPassword) {
       Toast.show({
-        type: "error",
-        text1: "Error",
-        text2: "Passwords do not match"
-      })
-      return
+        type: 'error',
+        text1: 'Error',
+        text2: 'Passwords do not match',
+      });
+
+      return;
     }
 
     try {
-      setLoading(true)
+      setLoading(true);
 
       const payload = {
-        reg_no: regNo ,
+        reg_no: regNumber,
         password: password,
-        confirmpassword: confirmPassword
-      }
+        confirmpassword: confirmPassword,
+      };
 
       const response = await UserRegister(payload);
 
-      if (response?.data?.success || response?.status === 200 || response?.status === 201) {
+      if (response?.data?.success) {
         Toast.show({
-          type: "success",
-          text1: "Registration Successful",
-          text2: "You can now login with your new credentials."
-        })
+          type: 'success',
+          text1: 'Registration Successful',
+          text2: 'You can now login with your credentials',
+        });
 
-        // Redirect back to login page
-        router.replace('/auth/Login')
+        router.replace('/auth/Login');
       }
-
-    } catch (err:any) {
+    } catch (err: any) {
       Toast.show({
-        type: "error",
-        text1: "Registration Failed",
-        text2: err?.response?.data?.message || "An error occurred during registration"
-      })
+        type: 'error',
+        text1: 'Registration Failed',
+        text2: err?.response?.data?.message || 'Something went wrong',
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{flex:1}}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1 }}
     >
-      <View style={{flex:1, justifyContent:'center', padding:20, backgroundColor: '#f8fafc'}}>
-        <Text style={{fontSize:28,fontWeight:"bold",textAlign:'center',marginBottom:10, color: '#0f172a'}}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          padding: 20,
+          backgroundColor: '#f8fafc',
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 28,
+            fontWeight: 'bold',
+            textAlign: 'center',
+            marginBottom: 10,
+            color: '#0f172a',
+          }}
+        >
           Complete Registration
         </Text>
-        <Text style={{fontSize:16,textAlign:'center',marginBottom:30, color: '#64748b'}}>
-          Set a password for your account (Reg No: {regNo})
+
+        <Text
+          style={{
+            fontSize: 16,
+            textAlign: 'center',
+            marginBottom: 30,
+            color: '#64748b',
+          }}
+        >
+          Set a password for your account (Reg No: {regNumber})
         </Text>
 
+        {/* Student Name */}
+
         <TextInput
-  placeholder="Student Name"
-  value={student?.student_name || ""}
-  editable={false}
-  style={{
-    borderWidth:1,
-    borderColor:"#ccc",
-    backgroundColor:"#f1f5f9",
-    padding:14,
-    borderRadius:8,
-    marginBottom:15
-  }}
-/>
+          placeholder="Student Name"
+          value={student?.student_name || ''}
+          editable={false}
+          style={{
+            borderWidth: 1,
+            borderColor: '#ccc',
+            backgroundColor: '#f1f5f9',
+            padding: 14,
+            borderRadius: 8,
+            marginBottom: 15,
+          }}
+        />
 
-<TextInput
-  placeholder="Department"
-  value={student?.department || ""}
-  editable={false}
-  style={{
-    borderWidth:1,
-    borderColor:"#ccc",
-    backgroundColor:"#f1f5f9",
-    padding:14,
-    borderRadius:8,
-    marginBottom:15
-  }}
-/>
+        {/* Department */}
 
-<TextInput
-  placeholder="Password"
-  value={password}
-  secureTextEntry
-  style={{
-    borderWidth:1,
-    borderColor:"#ccc",
-    backgroundColor:"white",
-    padding:14,
-    borderRadius:8,
-    marginBottom:15
-  }}
-/>
+        <TextInput
+          placeholder="Department"
+          value={student?.department || ''}
+          editable={false}
+          style={{
+            borderWidth: 1,
+            borderColor: '#ccc',
+            backgroundColor: '#f1f5f9',
+            padding: 14,
+            borderRadius: 8,
+            marginBottom: 15,
+          }}
+        />
+
+        {/* Password */}
+
+        <TextInput
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          style={{
+            borderWidth: 1,
+            borderColor: '#ccc',
+            backgroundColor: 'white',
+            padding: 14,
+            borderRadius: 8,
+            marginBottom: 15,
+          }}
+        />
+
+        {/* Confirm Password */}
 
         <TextInput
           placeholder="Confirm Password"
@@ -138,45 +191,59 @@ useEffect(() => {
           onChangeText={setConfirmPassword}
           secureTextEntry
           style={{
-            borderWidth:1,
-            borderColor:"#ccc",
-            backgroundColor: "white",
-            padding:14,
-            borderRadius:8,
-            marginBottom:25,
-            fontSize: 16
+            borderWidth: 1,
+            borderColor: '#ccc',
+            backgroundColor: 'white',
+            padding: 14,
+            borderRadius: 8,
+            marginBottom: 25,
           }}
         />
 
+        {/* Register Button */}
+
         <Pressable
           onPress={handleRegister}
-          disabled={loading}
+          disabled={loading || !password || !confirmPassword}
           style={{
-            backgroundColor:'#0284c7',
-            padding:16,
-            borderRadius:8,
-            alignItems:'center'
+            backgroundColor: '#0284c7',
+            padding: 16,
+            borderRadius: 8,
+            alignItems: 'center',
           }}
         >
-          {loading
-            ? <ActivityIndicator color="white"/>
-            : <Text style={{color:"white", fontSize: 16, fontWeight: 'bold'}}>Register</Text>
-          }
+          {loading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text
+              style={{
+                color: 'white',
+                fontSize: 16,
+                fontWeight: 'bold',
+              }}
+            >
+              Register
+            </Text>
+          )}
         </Pressable>
+
+        {/* Back Button */}
 
         <Pressable
           onPress={() => router.back()}
           style={{
-            padding:16,
+            padding: 16,
             marginTop: 10,
-            alignItems:'center'
+            alignItems: 'center',
           }}
         >
-          <Text style={{color:"#64748b", fontSize: 16}}>Go Back</Text>
+          <Text style={{ color: '#64748b', fontSize: 16 }}>Go Back</Text>
         </Pressable>
       </View>
-    </KeyboardAvoidingView>
-  )
-}
 
-export default Register
+      <Toast />
+    </KeyboardAvoidingView>
+  );
+};
+
+export default Register;
