@@ -2,7 +2,6 @@ import db from '../config/db.js';
 import HandleError from '../helper/HandleError.js';
 import sendEmail from '../helper/sendEmail.js';
 import sendToken from '../helper/sendToken.js';
-import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import ip from 'ip';
 import bcrypt from 'bcryptjs';
@@ -295,9 +294,7 @@ export const forgotPassword = async (req, res, next) => {
     );
 
     // reset link
-    const resetUrl = `${req.protocol}://${req.get(
-      'host'
-    )}/reset-password?token=${token}`;
+    const resetUrl = `${req.protocol}://${ipAddress}:5173/reset-password?token=${token}`;
 
     const message = `Dear ${user.full_name},
 

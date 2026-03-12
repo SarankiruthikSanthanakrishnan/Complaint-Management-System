@@ -28,7 +28,7 @@ AuthRoutes.route('/user/updateProfile').put(
   updateProfile
 );
 AuthRoutes.route('/user/forgot-password').post(forgotPassword);
-AuthRoutes.route('/user/reset-password/:token').post(resetPassword);
+AuthRoutes.route('/user/reset-password').post(resetPassword);
 AuthRoutes.route('/user/change-password').post(isAuthenticated, changePassword);
 
 export default AuthRoutes;

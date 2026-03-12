@@ -30,24 +30,36 @@ api.interceptors.response.use(
   async (error: any) => {
     const originalRequest = error.config;
     if (error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
       const refreshToken = await AsyncStorage.getItem('refreshToken');
       if (refreshToken) {
-        const response = await api.post(
-          '/auth/user/refresh-token',
-          { refreshToken },
-          {
-            withCredentials: true,
-          }
-        );
-        if (response.status === 200) {
-          await AsyncStorage.setItem('accessToken', response.data.accessToken);
-          await AsyncStorage.setItem(
-            'refreshToken',
-            response.data.refreshToken
+        try {
+          const response = await api.post(
+            '/auth/user/refresh-token',
+            { refreshToken },
+            {
+              withCredentials: true,
+            }
           );
-          originalRequest.headers.Authorization = `Bearer ${response.data.accessToken}`;
-          return api(originalRequest);
+          if (response.status === 200) {
+            await AsyncStorage.setItem(
+              'accessToken',
+              response.data.accessToken
+            );
+            // Updating the original request with the new access token
+            originalRequest.headers.Authorization = `Bearer ${response.data.accessToken}`;
+            return api(originalRequest);
+          }
+        } catch (refreshError) {
+          // If refresh token is also invalid or expired, log them out
+          await AsyncStorage.removeItem('accessToken');
+          await AsyncStorage.removeItem('refreshToken');
+          // You can also add router push here if needed, but often clearing storage
+          // triggers the AuthContext to re-render and kick the user out.
         }
+      } else {
+        // No refresh token available, log out
+        await AsyncStorage.removeItem('accessToken');
       }
     }
     return Promise.reject(error);

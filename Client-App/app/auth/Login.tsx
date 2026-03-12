@@ -13,6 +13,8 @@ import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
 import useAuth from '@/context/AuthContext';
 import { ForgotPassword } from '@/services/AuthService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { jwtDecode } from 'jwt-decode';
 
 const Login = () => {
   const { login, isAuthenticated, user, error, loading } = useAuth();
@@ -37,20 +39,37 @@ const Login = () => {
 
   // Redirect based on role
   useEffect(() => {
-    if (isAuthenticated && user) {
-      Toast.show({
-        type: 'success',
-        text1: 'Login Successful',
-      });
+    const checkRedirection = async () => {
+      if (isAuthenticated && user) {
+        Toast.show({
+          type: 'success',
+          text1: 'Login Successful',
+        });
 
-      if (user.role === 'Student' || user.role === 'Faculty') {
-        router.replace('/(user-tabs)/Home');
-      } else if (user.role === 'Technician') {
-        router.replace('/(technician-tabs)/Dashboard');
-      } else if (user.role === 'Admin' || user.role === 'MasterAdmin') {
-        router.replace('/(admin-tabs)/Dashboard');
+        try {
+          const accessToken = await AsyncStorage.getItem('accessToken');
+          if (accessToken) {
+            const decoded: any = jwtDecode(accessToken);
+            if (decoded?.must_change_password) {
+              router.replace('/auth/ChangePassword');
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('Error decoding token:', error);
+        }
+
+        if (user.role === 'Student' || user.role === 'Faculty') {
+          router.replace('/(user-tabs)/Home');
+        } else if (user.role === 'Technician') {
+          router.replace('/(technician-tabs)/Dashboard');
+        } else if (user.role === 'Admin' || user.role === 'MasterAdmin') {
+          router.replace('/(admin-tabs)/Dashboard');
+        }
       }
-    }
+    };
+
+    checkRedirection();
   }, [isAuthenticated, user]);
 
   const handleLogin = async () => {
