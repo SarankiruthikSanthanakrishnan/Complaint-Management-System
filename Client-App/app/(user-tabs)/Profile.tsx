@@ -35,7 +35,6 @@ const Profile = () => {
       setFullName(user.full_name || '');
       setEmail(user.email || '');
       setContact(user.contact || '');
-      setImage(user.profile_image || null);
     }
   }, [user]);
 
@@ -77,6 +76,7 @@ const Profile = () => {
 
     if (img) {
       setImage(img);
+      console.log('Selected image:', img);
     }
   };
 
@@ -130,13 +130,15 @@ const Profile = () => {
   };
 
   // Image URL logic
-  const profile =
-    image && image.startsWith('file')
-      ? image
-      : image
-        ? `http://${ipAddress}:4500${image}`
-        : 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+  const defaultAvatar = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 
+  const profile = image
+    ? image
+    : user?.profile_image
+      ? `http://${ipAddress}:4500${user.profile_image}?t=${Date.now()}`
+      : defaultAvatar;
+  console.log('User image:', user?.profile_image);
+  console.log('Final profile URL:', profile);
   return (
     <ScrollView
       contentContainerStyle={{
