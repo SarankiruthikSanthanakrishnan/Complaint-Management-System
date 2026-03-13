@@ -1,5 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from './Api';
+import axios from 'axios';
+import { ipAddress } from '@/utils/IpAddress';
 
 export const UserVerify = (data: string) => {
   return api.post('/auth/user/verify-regno', { reg_no: data });
@@ -22,11 +24,7 @@ export const UserLogout = () => {
 };
 
 export const UpdateUser = (userData: Object) => {
-  return api.put('/auth/user/updateProfile', userData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+  return api.put('/auth/user/updateProfile', userData);
 };
 
 export const ChangePassword = (password: string, confirpassword: string) => {
@@ -46,4 +44,16 @@ export const ResetPassword = (
     password: password,
     confirmpassword: confirmpassword,
   });
+};
+
+export const refreshResponse = (refreshToken: string) => {
+  return axios.post(
+    `http://${ipAddress}:4500/api/v1/auth/user/refresh-token`,
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${refreshToken}`,
+      },
+    }
+  );
 };
