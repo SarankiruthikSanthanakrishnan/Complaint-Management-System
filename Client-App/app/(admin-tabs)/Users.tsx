@@ -1,35 +1,42 @@
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native'
-import React, { useEffect, useState } from 'react'
-import { GetAllUsers } from '@/services/AdminServices'
-import { User } from '@/types/types'
-import { useRouter } from 'expo-router'
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  ActivityIndicator,
+  TouchableOpacity,
+} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { GetAllUsers } from '@/services/AdminServices';
+import { User } from '@/types/types';
+import { useRouter } from 'expo-router';
 
 const Users = () => {
-  const [users, setUsers] = useState<User[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
-  const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    fetchUsers()
-  }, [])
+    fetchUsers();
+  }, []);
 
   const fetchUsers = async () => {
     try {
-      setLoading(true)
-      const response = await GetAllUsers()
+      setLoading(true);
+      const response = await GetAllUsers();
       if (response.data && response.data.users) {
-        setUsers(response.data.users)
+        setUsers(response.data.users);
       } else {
-        setUsers(response.data || [])
+        setUsers(response.data || []);
       }
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Failed to fetch users')
-      console.log('Error fetching users:', err)
+      setError(err?.response?.data?.message || 'Failed to fetch users');
+      console.log('Error fetching users:', err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const renderUserCard = ({ item }: { item: User }) => (
     <TouchableOpacity
@@ -42,19 +49,21 @@ const Users = () => {
         <Text style={styles.roleBadge}>{item.role}</Text>
       </View>
       <View style={styles.cardBody}>
-        <Text style={styles.infoText}>ID: {item.id ? item.id.toString() : 'N/A'}</Text>
+        <Text style={styles.infoText}>
+          ID: {item.id ? item.id.toString() : 'N/A'}
+        </Text>
         <Text style={styles.infoText}>Username: {item.username || 'N/A'}</Text>
         <Text style={styles.infoText}>Email: {item.email || 'N/A'}</Text>
       </View>
     </TouchableOpacity>
-  )
+  );
 
   if (loading) {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color="#0000ff" />
       </View>
-    )
+    );
   }
 
   if (error) {
@@ -62,7 +71,7 @@ const Users = () => {
       <View style={styles.centerContainer}>
         <Text style={styles.errorText}>{error}</Text>
       </View>
-    )
+    );
   }
 
   return (
@@ -70,21 +79,23 @@ const Users = () => {
       <Text style={styles.title}>All Users</Text>
       <FlatList
         data={users}
-        keyExtractor={(item, index) => (item.id ? item.id.toString() : index.toString())}
+        keyExtractor={(item, index) =>
+          item.id ? item.id.toString() : index.toString()
+        }
         renderItem={renderUserCard}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
       />
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F5F7',
     paddingHorizontal: 16,
-    paddingTop: 20,
+    paddingTop: 40,
   },
   centerContainer: {
     flex: 1,
@@ -97,6 +108,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 16,
     color: '#333',
+    textAlign: 'center',
   },
   listContainer: {
     paddingBottom: 20,
@@ -147,7 +159,7 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#D8000C',
     fontSize: 16,
-  }
-})
+  },
+});
 
-export default Users
+export default Users;

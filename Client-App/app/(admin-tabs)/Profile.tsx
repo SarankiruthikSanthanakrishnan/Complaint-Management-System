@@ -7,13 +7,12 @@ import {
   ScrollView,
   TextInput,
 } from 'react-native';
-import { Shield, User, GraduationCap, BookUser } from 'lucide-react-native';
 
+import { Shield, GraduationCap, BookUser } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import useAuth from '@/context/AuthContext';
 
-import axios from 'axios';
 import pickImage from '@/utils/Picker';
 import Toast from 'react-native-toast-message';
 import { UpdateUser } from '@/services/AuthService';
@@ -24,9 +23,9 @@ const Profile = () => {
   const router = useRouter();
 
   const [isEdit, setIsEdit] = useState(false);
-  const [fullname, setFullName] = useState<string>('');
-  const [email, setEmail] = useState<string>('');
-  const [contact, setContact] = useState<string>('');
+  const [fullname, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [contact, setContact] = useState('');
   const [image, setImage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -35,52 +34,43 @@ const Profile = () => {
       setFullName(user.full_name || '');
       setEmail(user.email || '');
       setContact(user.contact || '');
-      setImage(user.profile_image || null);
     }
   }, [user]);
 
   const roleConfig: any = {
-    Admin: {
-      color: '#ff3b30',
-      label: 'ADMIN',
-      icon: Shield,
-    },
-    MasterAdmin: {
-      color: '#007AFF',
-      label: 'MASTER ADMIN',
-      icon: Shield,
-    },
-    Faculty: {
-      color: '#34C759',
-      label: 'FACULTY',
-      icon: BookUser,
-    },
-    Student: {
-      color: '#5856D6',
-      label: 'STUDENT',
-      icon: GraduationCap,
-    },
+    Admin: { color: '#ff3b30', label: 'ADMIN', icon: Shield },
+    MasterAdmin: { color: '#007AFF', label: 'MASTER ADMIN', icon: Shield },
+    Faculty: { color: '#34C759', label: 'FACULTY', icon: BookUser },
+    Student: { color: '#5856D6', label: 'STUDENT', icon: GraduationCap },
   };
 
   const role = user?.role || 'Student';
   const roleStyle = roleConfig[role] || roleConfig.Student;
   const RoleIcon = roleStyle.icon;
-  // Logout
+
+  const defaultAvatar = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+
+  const profile = image
+    ? image
+    : user?.profile_image
+      ? `http://${ipAddress}:4500${user.profile_image}?t=${Date.now()}`
+      : defaultAvatar;
+
+  //debug
+  console.log('User object:', user);
+  console.log('User profile_image:', user?.profile_image);
+  console.log('Local image state:', image);
+  console.log('Final profile URL:', profile);
   const handleLogout = async () => {
     await logout();
     router.replace('/auth/Login');
   };
 
-  // Pick Image
   const handlePickImage = async () => {
     const img = await pickImage();
-
-    if (img) {
-      setImage(img);
-    }
+    if (img) setImage(img);
   };
 
-  // Update Profile
   const handleEdit = async () => {
     try {
       if (!fullname.trim()) {
@@ -95,7 +85,6 @@ const Profile = () => {
       setSaving(true);
 
       const formData = new FormData();
-
       formData.append('full_name', fullname);
       formData.append('contact', contact);
 
@@ -116,6 +105,7 @@ const Profile = () => {
           text2: 'Your profile was updated successfully',
         });
 
+        setImage(null);
         setIsEdit(false);
       }
     } catch (error: any) {
@@ -128,14 +118,6 @@ const Profile = () => {
       setSaving(false);
     }
   };
-
-  // Image URL logic
-  const profile =
-    image && image.startsWith('file')
-      ? image
-      : image
-        ? `http://${ipAddress}:4500${image}`
-        : 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 
   return (
     <ScrollView
@@ -162,14 +144,7 @@ const Profile = () => {
       </Pressable>
 
       {/* Name */}
-      <Text
-        style={{
-          fontSize: 24,
-          fontWeight: 'bold',
-        }}
-      >
-        {fullname}
-      </Text>
+      <Text style={{ fontSize: 24, fontWeight: 'bold' }}>{fullname}</Text>
 
       {/* Email */}
       <Text
@@ -213,14 +188,7 @@ const Profile = () => {
           ) : (
             <>
               <Text style={{ color: '#888', fontSize: 13 }}>FULL NAME</Text>
-
-              <Text
-                style={{
-                  fontSize: 17,
-                  fontWeight: '600',
-                  marginTop: 4,
-                }}
-              >
+              <Text style={{ fontSize: 17, fontWeight: '600', marginTop: 4 }}>
                 {fullname}
               </Text>
             </>
@@ -230,61 +198,40 @@ const Profile = () => {
         {/* Email */}
         <View style={{ marginBottom: 18 }}>
           <Text style={{ color: '#888', fontSize: 13 }}>EMAIL</Text>
-
-          <Text
-            style={{
-              fontSize: 17,
-              fontWeight: '600',
-              marginTop: 4,
-            }}
-          >
+          <Text style={{ fontSize: 17, fontWeight: '600', marginTop: 4 }}>
             {email}
           </Text>
         </View>
+
         {/* Contact */}
         <View style={{ marginBottom: 18 }}>
           {isEdit ? (
-            <>
-              <TextInput
-                placeholder="Contact"
-                value={contact}
-                onChangeText={setContact}
-                style={{
-                  borderWidth: 1,
-                  borderColor: '#ddd',
-                  borderRadius: 8,
-                  padding: 10,
-                  marginTop: 5,
-                }}
-              />
-            </>
+            <TextInput
+              placeholder="Contact"
+              value={contact}
+              onChangeText={setContact}
+              style={{
+                borderWidth: 1,
+                borderColor: '#ddd',
+                borderRadius: 8,
+                padding: 10,
+                marginTop: 5,
+              }}
+            />
           ) : (
             <>
               <Text style={{ color: '#888', fontSize: 13 }}>CONTACT</Text>
-
-              <Text
-                style={{
-                  fontSize: 17,
-                  fontWeight: '600',
-                  marginTop: 4,
-                }}
-              >
-                {user?.contact || ''}
+              <Text style={{ fontSize: 17, fontWeight: '600', marginTop: 4 }}>
+                {contact}
               </Text>
             </>
           )}
         </View>
+
         {/* Username */}
         <View style={{ marginBottom: 18 }}>
           <Text style={{ color: '#888', fontSize: 13 }}>USERNAME</Text>
-
-          <Text
-            style={{
-              fontSize: 17,
-              fontWeight: '600',
-              marginTop: 4,
-            }}
-          >
+          <Text style={{ fontSize: 17, fontWeight: '600', marginTop: 4 }}>
             {user?.username}
           </Text>
         </View>
@@ -321,13 +268,7 @@ const Profile = () => {
       </View>
 
       {/* Buttons */}
-      <View
-        style={{
-          flexDirection: 'row',
-          marginTop: 35,
-          gap: 15,
-        }}
-      >
+      <View style={{ flexDirection: 'row', marginTop: 35, gap: 15 }}>
         {/* Edit */}
         <Pressable
           style={{
@@ -337,11 +278,8 @@ const Profile = () => {
             borderRadius: 10,
           }}
           onPress={() => {
-            if (isEdit) {
-              handleEdit();
-            } else {
-              setIsEdit(true);
-            }
+            if (isEdit) handleEdit();
+            else setIsEdit(true);
           }}
         >
           {saving ? (
