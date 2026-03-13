@@ -13,6 +13,9 @@ const isAuthenticated = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return next(new HandleError('Access Token Expired', 401));
+    }
     console.log(error);
     return next(new HandleError('Invalid Token', 401));
   }

@@ -156,13 +156,13 @@ export const login = async (req, res, next) => {
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: isProduction,
-      maxAge: process.env.COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
+      maxAge: process.env.COOKIE_EXPIRES_IN_RFS * 24 * 60 * 60 * 1000,
       sameSite: isProduction ? 'none' : 'lax',
     });
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
       secure: isProduction,
-      maxAge: process.env.ACCESS_EXPIRES_IN.slice(0, 2) * 60 * 1000,
+      maxAge: process.env.COOKIE_EXPIRES_IN_ACS * 60 * 1000,
       sameSite: isProduction ? 'none' : 'lax',
     });
     res.status(200).json({
@@ -180,13 +180,19 @@ export const login = async (req, res, next) => {
 
 export const refreshController = async (req, res, next) => {
   try {
-    const refreshToken = req.cookies.refreshToken;
+    const refreshToken =
+      req.headers.Authorization?.split(' ')[1] ||
+      req.headers.authorization?.split(' ')[1] ||
+      req.cookies.refreshToken;
     if (!refreshToken) {
       return next(
         new HandleError('Refresh Token not Found, Please Login Again', 401)
       );
     }
-    const decoded = await jwt.verify(refreshToken, process.env.JWT_SECRET);
+    const decoded = await jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_KEY
+    );
     const userRes = await db.query(
       'select id,role,must_change_password from users where id=$1',
       [decoded.id]
@@ -208,7 +214,7 @@ export const refreshController = async (req, res, next) => {
     res.cookie('accessToken', newAccessToken, {
       httpOnly: true,
       secure: isProduction,
-      maxAge: process.env.ACCESS_EXPIRES_IN.slice(0, 2) * 60 * 1000,
+      maxAge: process.env.COOKIE_EXPIRES_IN_ACS * 60 * 1000,
       sameSite: isProduction ? 'none' : 'lax',
     });
     res.status(200).json({
@@ -217,8 +223,13 @@ export const refreshController = async (req, res, next) => {
       accessToken: newAccessToken,
     });
   } catch (error) {
-    console.log(error);
-    return next(new HandleError('Internal Server Error', 500));
+    if (error.name === 'TokenExpiredError') {
+      return next(new HandleError('Refresh Token Expired', 401));
+    }
+
+    if (error.name === 'JsonWebTokenError') {
+      return next(new HandleError('Invalid Refresh Token', 401));
+    }
   }
 };
 
@@ -422,18 +433,29 @@ export const changePassword = async (req, res, next) => {
 };
 
 export const updateProfile = async (req, res, next) => {
-  const profile_image = req.file ? `/uploads/${req.file.filename}` : null;
   try {
     const userId = req.user.id;
     const { full_name, contact } = req.body;
+
     if (!full_name || !contact) {
       return next(new HandleError('Full name and contact are required', 400));
     }
 
-    await db.query(
-      'update users set full_name=$1, contact=$2, profile_image=$3 where id=$4',
-      [full_name, contact, profile_image, userId]
-    );
+    if (req.file) {
+      const profile_image = `/uploads/${req.file.filename}`;
+
+      await db.query(
+        'update users set full_name=$1, contact=$2, profile_image=$3 where id=$4',
+        [full_name, contact, profile_image, userId]
+      );
+    } else {
+      await db.query('update users set full_name=$1, contact=$2 where id=$3', [
+        full_name,
+        contact,
+        userId,
+      ]);
+    }
+
     res.status(200).json({
       success: true,
       message: 'Profile updated successfully',

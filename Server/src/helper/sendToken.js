@@ -7,9 +7,9 @@ const sendToken = (options) => {
       role: options.role,
       must_change_password: options.must_change_password,
     },
-    process.env.JWT_SECRET,
+    process.env.REFRESH_TOKEN_KEY,
     {
-      expiresIn: process.env.JWT_EXPIRES_IN,
+      expiresIn: process.env.REFRESH_EXPIRES_IN,
     }
   );
   const accessToken = jwt.sign(
