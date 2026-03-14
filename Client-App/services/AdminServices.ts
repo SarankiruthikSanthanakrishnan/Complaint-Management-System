@@ -8,8 +8,8 @@ export const GetSingleUser = (id: number) => {
   return api.get(`/admin/user/${id}`);
 };
 
-export const UpdateSingleUser = (id: number) => {
-  return api.put(`/admin/user/${id}`);
+export const UpdateSingleUser = (id: number, userData: any) => {
+  return api.put(`/admin/user/${id}`, userData);
 };
 
 export const UpdateManyUser = () => {

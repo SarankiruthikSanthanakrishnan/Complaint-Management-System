@@ -17,3 +17,10 @@ export interface Student {
   contact_number: string;
   active: Boolean;
 }
+
+export interface Notification {
+  id: Number;
+  title: string;
+  description: string;
+  timestamp: string;
+}
