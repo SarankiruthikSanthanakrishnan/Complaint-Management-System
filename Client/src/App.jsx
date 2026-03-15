@@ -1,6 +1,6 @@
 import React from 'react';
 import Navbar from './Components/(users)/Navbar';
-import Footer from './Components/Footer';
+
 import { Route, Routes } from 'react-router-dom';
 import Home from './(users)/Home';
 import MyComplaint from './(users)/MyComplaint';
@@ -11,7 +11,11 @@ import Settings from './(admin)/Settings';
 import Reports from './(admin)/Reports';
 import Users from './(admin)/Users';
 import Technicians from './(admin)/Technicians';
+import Complaints from './(admin)/Complaints';
 import TechincianDashboard from './(technician)/TechnicianDashboard';
+import Notification from './(users)/Notification';
+import { SingleUser } from './(admin)/SingleUser';
+import SingleTechnicians from './(admin)/SingleTechnicians';
 
 const App = () => {
   return (
@@ -31,14 +35,16 @@ const App = () => {
         <Route path="/admin/reports" element={<Reports />} />
         <Route path="/admin/users" element={<Users />} />
         <Route path="/admin/technicians" element={<Technicians />} />
-        <Route path="/admin/complaints" element={<Dashboard />} />
+        <Route path="/admin/complaints" element={<Complaints />} />
+        <Route path="/notifications" element={<Notification />} />
+        <Route path="/admin/users/1" element={<SingleUser />} />
+        <Route path="/admin/technicians/1" element={<SingleTechnicians />} />
 
         {/* TechnicianRoutes */}
 
         <Route path="/technician/dashboard" element={<TechincianDashboard />} />
+        <Route path="/technician/notifications" element={<Notification />} />
       </Routes>
-
-      <Footer />
     </>
   );
 };
