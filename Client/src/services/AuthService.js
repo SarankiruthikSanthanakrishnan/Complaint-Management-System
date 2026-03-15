@@ -1,21 +1,29 @@
-import api from "./api.js"
+import api from './Api';
 
-export const verifyRegNo = (reg_no)=>{
-    return (
-        api.post('/auth/user/verify-regno',{reg_no})
-    )
-}
+export const GetAllUsers = () => {
+  return api.get('/admin/user/getUsers');
+};
 
-export const login = (username,password)=>{
-    return (
-        api.post('/auth/user/login',{username,password})
-    )
-}
+export const GetSingleUser = (id) => {
+  return api.get(`/admin/user/${id}`);
+};
 
-export const currentUser = ()=>{
-    return (
-        api.get('/auth/user/get-user')
-    )
-}
+export const UpdateSingleUser = (id, userData) => {
+  return api.put(`/admin/user/${id}`, userData);
+};
 
+export const UpdateManyUser = () => {
+  return api.put('/admin/user/update-multiple', {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
 
+export const DeleteSingleUser = (id) => {
+  return api.delete(`/admin/user/${id}`);
+};
+
+export const DeleteMultipleUser = () => {
+  return api.delete('/admin/user/delete-multiple');
+};
