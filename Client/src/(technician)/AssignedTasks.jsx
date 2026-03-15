@@ -1,11 +1,7 @@
-import React from 'react'
+import React from 'react';
 
 const AssignedTasks = () => {
-  return (
-    <div>
+  return <div>Assigned Tasks</div>;
+};
 
-    </div>
-  )
-}
-
-export default AssignedTasks
+export default AssignedTasks;

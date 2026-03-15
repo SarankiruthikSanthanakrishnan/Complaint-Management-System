@@ -1,5 +1,5 @@
 import React from 'react';
-import Navbar from './Components/(users)/Navbar';
+import Navbar from './Components/Navbar';
 
 import { Route, Routes } from 'react-router-dom';
 import Home from './(users)/Home';
@@ -16,6 +16,10 @@ import TechincianDashboard from './(technician)/TechnicianDashboard';
 import Notification from './(users)/Notification';
 import { SingleUser } from './(admin)/SingleUser';
 import SingleTechnicians from './(admin)/SingleTechnicians';
+import TechNotification from './(technician)/TechNotification';
+import TechnicianProfile from './(technician)/TechnicianProfile';
+import AssignedTasks from './(technician)/AssignedTasks';
+import Footer from './Components/Footer';
 
 const App = () => {
   return (
@@ -43,8 +47,14 @@ const App = () => {
         {/* TechnicianRoutes */}
 
         <Route path="/technician/dashboard" element={<TechincianDashboard />} />
-        <Route path="/technician/notifications" element={<Notification />} />
+        <Route
+          path="/technician/notifications"
+          element={<TechNotification />}
+        />
+        <Route path="/technician/assigned-tasks" element={<AssignedTasks />} />
+        <Route path="/technician/profile" element={<TechnicianProfile />} />
       </Routes>
+      <Footer />
     </>
   );
 };

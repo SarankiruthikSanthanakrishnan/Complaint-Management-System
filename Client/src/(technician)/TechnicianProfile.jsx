@@ -1,11 +1,10 @@
 import React from 'react';
 
-const profile = {
-  fullName: 'Sarankiruthik S S',
-  email: 'sknexus.erp@gmail.com',
-};
-
-const Profile = () => {
+const TechnicianProfile = () => {
+  const profile = {
+    fullName: 'Sarankiruthik S S',
+    email: 'sknexus.erp@gmail.com',
+  };
   return (
     <section className="min-h-screen bg-slate-200 px-4 py-10 sm:px-6 lg:px-10">
       <div className="mx-auto flex w-full max-w-4xl flex-col items-center">
@@ -59,4 +58,4 @@ const Profile = () => {
   );
 };
 
-export default Profile;
+export default TechnicianProfile;
