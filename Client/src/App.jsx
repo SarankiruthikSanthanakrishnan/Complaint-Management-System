@@ -11,7 +11,7 @@ import Settings from './(admin)/Settings';
 import Reports from './(admin)/Reports';
 import Users from './(admin)/Users';
 import Technicians from './(admin)/Technicians';
-import Dashboard from './(technician)/TechnicianDashboard';
+import TechincianDashboard from './(technician)/TechnicianDashboard';
 
 const App = () => {
   return (
@@ -35,7 +35,7 @@ const App = () => {
 
         {/* TechnicianRoutes */}
 
-        <Route path="/technician/dashboard" element={<Dashboard />} />
+        <Route path="/technician/dashboard" element={<TechincianDashboard />} />
       </Routes>
 
       <Footer />
