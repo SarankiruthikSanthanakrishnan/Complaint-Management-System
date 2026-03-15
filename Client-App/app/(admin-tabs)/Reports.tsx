@@ -71,6 +71,7 @@ const Reports = () => {
     >
       <Text style={{ fontSize: 24, fontWeight: 'bold' }}>Reports</Text>
       <FlatList
+        showsVerticalScrollIndicator={false}
         data={reports}
         renderItem={({ item }) => (
           <View

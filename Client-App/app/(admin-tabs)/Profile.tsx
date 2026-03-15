@@ -56,11 +56,6 @@ const Profile = () => {
       ? `http://${ipAddress}:4500${user.profile_image}?t=${Date.now()}`
       : defaultAvatar;
 
-  //debug
-  console.log('User object:', user);
-  console.log('User profile_image:', user?.profile_image);
-  console.log('Local image state:', image);
-  console.log('Final profile URL:', profile);
   const handleLogout = async () => {
     await logout();
     router.replace('/auth/Login');

@@ -10,6 +10,7 @@ import { fileURLToPath } from 'url';
 import MsRoutes from './routes/MsRoutes.js';
 import TechnicianRoutes from './routes/TechnicianRoutes.js';
 import ip from 'ip';
+import ComplaintRoutes from './routes/ComplaintRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,6 +41,7 @@ app.use('/api/v1/auth', AuthRoutes);
 app.use('/api/v1/admin', AdminRoutes);
 app.use('/api/v1/msadmin', MsRoutes);
 app.use('/api/v1/technician', TechnicianRoutes);
+app.use('/api/v1/complaint', ComplaintRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

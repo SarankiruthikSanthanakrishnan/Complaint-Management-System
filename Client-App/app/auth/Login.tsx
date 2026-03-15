@@ -46,19 +46,6 @@ const Login = () => {
           text1: 'Login Successful',
         });
 
-        try {
-          const accessToken = await AsyncStorage.getItem('accessToken');
-          if (accessToken) {
-            const decoded: any = jwtDecode(accessToken);
-            if (decoded?.must_change_password) {
-              router.replace('/auth/ChangePassword');
-              return;
-            }
-          }
-        } catch (error) {
-          console.error('Error decoding token:', error);
-        }
-
         if (user.role === 'Student' || user.role === 'Faculty') {
           router.replace('/(user-tabs)/Home');
         } else if (user.role === 'Technician') {

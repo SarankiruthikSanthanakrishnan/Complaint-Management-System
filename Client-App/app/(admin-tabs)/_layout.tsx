@@ -18,6 +18,12 @@ export default function AdminTabLayout() {
       icon: null,
       href: null,
     },
+    {
+      name: 'users/AddUser',
+      title: 'Add User',
+      icon: null,
+      href: null,
+    },
   ];
 
   return (

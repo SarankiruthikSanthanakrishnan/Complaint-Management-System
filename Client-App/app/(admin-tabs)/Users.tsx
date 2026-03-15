@@ -5,11 +5,13 @@ import {
   StyleSheet,
   ActivityIndicator,
   TouchableOpacity,
+  Pressable,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { GetAllUsers } from '@/services/AdminServices';
 import { User } from '@/types/types';
 import { useRouter } from 'expo-router';
+import { Plus } from 'lucide-react-native';
 
 const Users = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -21,6 +23,9 @@ const Users = () => {
     fetchUsers();
   }, []);
 
+  const AddNewUser = async () => {
+    router.push(`/(admin-tabs)/users/AddUser`);
+  };
   const fetchUsers = async () => {
     try {
       setLoading(true);
@@ -77,6 +82,12 @@ const Users = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>All Users</Text>
+      <Pressable onPress={AddNewUser} style={styles.addUserButton}>
+        <View style={styles.addUserContent}>
+          <Plus size={20} color="#fff" />
+          <Text style={styles.addUserText}>Add User</Text>
+        </View>
+      </Pressable>
       <FlatList
         data={users}
         keyExtractor={(item, index) =>
@@ -96,6 +107,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F7',
     paddingHorizontal: 16,
     paddingTop: 40,
+    position: 'relative',
   },
   centerContainer: {
     flex: 1,
@@ -159,6 +171,33 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#D8000C',
     fontSize: 16,
+  },
+  addUserButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: '#0066CC',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    zIndex: 1,
+  },
+
+  addUserContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+
+  addUserText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

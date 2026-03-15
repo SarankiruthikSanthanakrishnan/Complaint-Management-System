@@ -24,3 +24,16 @@ export interface Notification {
   description: string;
   timestamp: string;
 }
+
+export interface Complaint {
+  id: Number;
+  complaint_code: string;
+  subject: string;
+  description: string;
+  status: 'Submitted' | 'Assigned' | 'In Progress' | 'Completed' | 'InComplete';
+  created_at: string;
+  updated_at: string;
+  started_at: string;
+  evidence_before: string;
+  evidence_after: string;
+}

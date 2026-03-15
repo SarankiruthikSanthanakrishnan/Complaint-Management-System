@@ -2,6 +2,8 @@ import { User } from '@/types/types';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { UserLogin, CurrentUser, UserLogout } from '../services/AuthService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { jwtDecode } from 'jwt-decode';
+import { useRouter } from 'expo-router';
 
 export interface AuthContextType {
   user: User | null;
@@ -17,6 +19,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(
 );
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(false);
@@ -27,6 +30,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const checkUser = async () => {
       try {
         setLoading(true);
+        const accessToken = await AsyncStorage.getItem('accessToken');
+
+        if (!accessToken) {
+          setIsAuthenticated(false);
+          setUser(null);
+          return;
+        }
+        const decoded: any = await jwtDecode(accessToken);
+
+        if (decoded?.must_change_password) {
+          router.replace('/auth/ChangePassword');
+        }
 
         const userRes = await CurrentUser();
 

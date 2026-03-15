@@ -24,11 +24,18 @@ export const UserLogout = () => {
 };
 
 export const UpdateUser = (userData: Object) => {
-  return api.put('/auth/user/updateProfile', userData);
+  return api.put('/auth/user/updateProfile', userData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
 };
 
-export const ChangePassword = (password: string, confirpassword: string) => {
-  return api.post('/auth/user/change-password');
+export const ChangeUserPassword = (
+  password: string,
+  confirmPassword: string
+) => {
+  return api.post('/auth/user/change-password', { password, confirmPassword });
 };
 
 export const ForgotPassword = (email: string) => {
