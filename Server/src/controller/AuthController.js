@@ -307,20 +307,18 @@ export const forgotPassword = async (req, res, next) => {
     // reset link
     const resetUrl = `${req.protocol}://${ipAddress}:5173/reset-password?token=${token}`;
 
-    const message = `Dear ${user.full_name},
+    const message = `Dear ${user.full_name}, You requested a password reset.
 
-You requested a password reset.
+    Please click the following link:
 
-Please click the following link:
+    ${resetUrl}
 
-${resetUrl}
+    This link will expire in 5 minutes.
 
-This link will expire in 5 minutes.
+    If you did not request this, please ignore this email.
 
-If you did not request this, please ignore this email.
-
-Best regards,
-Complaint Management System Team`;
+    Best regards,
+    Complaint Management System Team`;
 
     await sendEmail({
       email: email,
@@ -394,13 +392,13 @@ export const resetPassword = async (req, res, next) => {
 
 export const changePassword = async (req, res, next) => {
   try {
-    const { password, confirmpassword } = req.body;
+    const { password, confirmPassword } = req.body;
 
-    if (!password || !confirmpassword) {
+    if (!password || !confirmPassword) {
       return next(new HandleError('Password fields required', 400));
     }
 
-    if (password !== confirmpassword) {
+    if (password !== confirmPassword) {
       return next(new HandleError('Password mismatch', 400));
     }
 
@@ -422,7 +420,7 @@ export const changePassword = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Password changed successfully',
+      message: 'Password changed successfully Please Login Now!',
       logout: true,
     });
   } catch (error) {
@@ -442,7 +440,7 @@ export const updateProfile = async (req, res, next) => {
     }
 
     if (req.file) {
-      const profile_image = `/uploads/${req.file.filename}`;
+      const profile_image = `/uploads/profiles/${req.file.filename}`;
 
       await db.query(
         'update users set full_name=$1, contact=$2, profile_image=$3 where id=$4',
